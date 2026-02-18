@@ -1,17 +1,16 @@
 # Milestone 1: Project Proposal
 
-## Project Title
-AnonReview
+## Project Title: AnonReview
 
 ### Team Information
 * Team Number: 3
 * Team Name: HomeworkBusters
 
 ### Team Members
-* Faisal Shahin
-* Adeline Bowman
-* Nicholas Woody
-* Nandini Bhat
+* Faisal Shahin - faisal.shahin@colorado.edu GitHub: shahinfa9999
+* Adeline Bowman - adbo5692@colorado.edu GitHub: Adeline-Bowman
+* Nicholas Woody - niwo9128@colorado.edu GitHub: niwo91
+* Nandini Bhat - nandini.bhat@colorado.edu, GitHub: nabhCO
 
 ### Scheduled Weekly Team Meeting
 Mondays at 7 PM via zoom
@@ -104,6 +103,7 @@ As a student, I want to join a small review group to discuss an assignment with 
 As a reviewer, I want to leave inline comments on specific lines of code so my feedback is clear and targeted.
 As a reviewer, I want to annotate sections of a PDF to point out conceptual mistakes.
 As a moderator, I want to flag or remove posts that violate academic integrity guidelines.
+
 
 
 
