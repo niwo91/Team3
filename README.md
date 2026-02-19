@@ -46,7 +46,7 @@ AnonReview aims to provide a dedicated space where students can share work anony
 
 ## Development Steps (Epics)
 
-# Epic 1: User Accounts and Anonymous Identity  
+#### Epic 1: User Accounts and Anonymous Identity  
 **Goal:** Allow users to create accounts and participate anonymously while preserving internal identity mapping.
 
 **Stories:**  
@@ -61,7 +61,7 @@ AnonReview aims to provide a dedicated space where students can share work anony
 
 ---
 
-# Epic 2: Multi Format Submissions  
+#### Epic 2: Multi Format Submissions  
 **Goal:** Support multiple submission formats for homework and exam content.
 
 **Stories:**  
@@ -76,7 +76,7 @@ AnonReview aims to provide a dedicated space where students can share work anony
 
 ---
 
-# Epic 3: Inline Review and Annotations  
+#### Epic 3: Inline Review and Annotations  
 **Goal:** Enable contextual feedback directly on submissions.
 
 **Stories:**  
@@ -91,7 +91,7 @@ AnonReview aims to provide a dedicated space where students can share work anony
 
 ---
 
-# Epic 4: Peer Review and Feedback  
+#### Epic 4: Peer Review and Feedback  
 **Goal:** Encourage meaningful feedback and peer learning.
 
 **Stories:**  
@@ -106,7 +106,7 @@ AnonReview aims to provide a dedicated space where students can share work anony
 
 ---
 
-# Epic 5: Breakout Review Groups  
+#### Epic 5: Breakout Review Groups  
 **Goal:** Support small-group collaborative reviews.
 
 **Stories:**  
@@ -121,7 +121,7 @@ AnonReview aims to provide a dedicated space where students can share work anony
 
 ---
 
-# Epic 6: Moderation and Reporting  
+#### Epic 6: Moderation and Reporting  
 **Goal:** Maintain platform quality and academic integrity.
 
 **Stories:**  
@@ -133,9 +133,9 @@ AnonReview aims to provide a dedicated space where students can share work anony
 - Reporting system and flag schema  
 - Moderator dashboard  
 - Basic moderation actions (review, hide, remove)  
+---
 
-
-### Project Tracking
+## Project Tracking
 The team will use Trello to track tasks, sprint progress, and blockers. Tasks will be assigned to individual team members and prioritized during weekly planning meetings. [Link to our tracking software page](https://team-3-project.atlassian.net/jira/core/projects/T3/board)
 
 ## Technology Stack
@@ -163,6 +163,7 @@ As a student, I want to join a small review group to discuss an assignment with 
 As a reviewer, I want to leave inline comments on specific lines of code so my feedback is clear and targeted.
 As a reviewer, I want to annotate sections of a PDF to point out conceptual mistakes.
 As a moderator, I want to flag or remove posts that violate academic integrity guidelines.
+
 
 
 
