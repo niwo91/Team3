@@ -46,34 +46,94 @@ AnonReview aims to provide a dedicated space where students can share work anony
 
 ## Development Steps (Epics)
 
-### Epic 1: User accounts and anonymous identity
-Account registration and login
-Anonymous posting system
-Internal identity mapping not visible to other users
+# Epic 1: User Accounts and Anonymous Identity  
+**Goal:** Allow users to create accounts and participate anonymously while preserving internal identity mapping.
 
-### Epic 2: Multi format submissions
-Text based questions and explanations
-Code snippet uploads with syntax highlighting
-PDF document uploads
+**Stories:**  
+- As a user, I can register and log in.  
+- As a user, I can post content anonymously.  
+- As a system, I can map anonymous posts to real users internally without exposing identities to others.  
 
-### Epic 3: Inline review and annotations
-Line by line comments on code snippets
-Section level comments on PDF documents
-Threaded discussions on specific annotations
+**Deliverables:**  
+- User authentication system  
+- Anonymous identity mapping in backend  
+- Account creation and login UI  
 
-### Epic 4: Peer review and feedback
-Commenting and feedback threads
-Upvoting helpful feedback
-Optional reviewer reputation system
+---
 
-### Epic 5: Breakout review groups
-Create small review groups for a submission
-Group discussion threads
-Group based feedback summaries
+# Epic 2: Multi Format Submissions  
+**Goal:** Support multiple submission formats for homework and exam content.
 
-### Epic 6: Moderation and reporting
-Flagging inappropriate or integrity violating content
-Moderator dashboard for reviewing reports
+**Stories:**  
+- As a user, I can submit text-based questions and explanations.  
+- As a user, I can upload code snippets with syntax highlighting.  
+- As a user, I can upload PDF documents for review.  
+
+**Deliverables:**  
+- Submission schema for text, code, and PDFs  
+- File upload and storage endpoints  
+- Frontend submission UI with syntax highlighting support  
+
+---
+
+# Epic 3: Inline Review and Annotations  
+**Goal:** Enable contextual feedback directly on submissions.
+
+**Stories:**  
+- As a reviewer, I can leave line-by-line comments on code snippets.  
+- As a reviewer, I can leave section-level comments on PDF documents.  
+- As a user, I can view and reply to threaded discussions tied to specific annotations.  
+
+**Deliverables:**  
+- Annotation data model  
+- Inline commenting API  
+- Frontend annotation and threaded discussion UI  
+
+---
+
+# Epic 4: Peer Review and Feedback  
+**Goal:** Encourage meaningful feedback and peer learning.
+
+**Stories:**  
+- As a user, I can comment on submissions.  
+- As a user, I can upvote helpful feedback.  
+- As a user, I can build reputation based on peer feedback (optional).  
+
+**Deliverables:**  
+- Comment and feedback endpoints  
+- Upvote system  
+- Basic reputation scoring logic and UI  
+
+---
+
+# Epic 5: Breakout Review Groups  
+**Goal:** Support small-group collaborative reviews.
+
+**Stories:**  
+- As a user, I can create or join a small review group for a submission.  
+- As a group, we can discuss a submission in a shared thread.  
+- As a group, we can generate a summarized group feedback response.  
+
+**Deliverables:**  
+- Group model and membership endpoints  
+- Group discussion threads  
+- Group feedback summary view  
+
+---
+
+# Epic 6: Moderation and Reporting  
+**Goal:** Maintain platform quality and academic integrity.
+
+**Stories:**  
+- As a user, I can flag inappropriate or integrity-violating content.  
+- As a moderator, I can review and act on reported content.  
+- As a moderator, I can manage flagged submissions and comments.  
+
+**Deliverables:**  
+- Reporting system and flag schema  
+- Moderator dashboard  
+- Basic moderation actions (review, hide, remove)  
+
 
 ### Project Tracking
 The team will use Trello to track tasks, sprint progress, and blockers. Tasks will be assigned to individual team members and prioritized during weekly planning meetings. [Link to our tracking software page](https://team-3-project.atlassian.net/jira/core/projects/T3/board)
@@ -103,6 +163,7 @@ As a student, I want to join a small review group to discuss an assignment with 
 As a reviewer, I want to leave inline comments on specific lines of code so my feedback is clear and targeted.
 As a reviewer, I want to annotate sections of a PDF to point out conceptual mistakes.
 As a moderator, I want to flag or remove posts that violate academic integrity guidelines.
+
 
 
 
