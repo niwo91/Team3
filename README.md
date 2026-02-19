@@ -143,14 +143,14 @@ The team will use Trello to track tasks, sprint progress, and blockers. Tasks wi
 ### Frontend
 -React with TypeScript for building the user interface
 -HTML and CSS for layout and styling
----
+
 ### Backend
 -Python with Flask for REST API development
----
+
 ### Database
 -SQLite for local development
 -PostgreSQL for deployment or production use
----
+
 ### File Storage
 -Local file storage during development
 -Cloud object storage for deployment if needed
@@ -163,6 +163,7 @@ As a student, I want to join a small review group to discuss an assignment with 
 As a reviewer, I want to leave inline comments on specific lines of code so my feedback is clear and targeted.
 As a reviewer, I want to annotate sections of a PDF to point out conceptual mistakes.
 As a moderator, I want to flag or remove posts that violate academic integrity guidelines.
+
 
 
 
