@@ -154,7 +154,7 @@ The team will use Trello to track tasks, sprint progress, and blockers. Tasks wi
 ### File Storage
 -Local file storage during development
 -Cloud object storage for deployment if needed
----
+
 ### Sample User Stories
 
 As a student, I want to anonymously upload a code snippet so others can comment on specific lines and help me debug.
@@ -163,6 +163,7 @@ As a student, I want to join a small review group to discuss an assignment with 
 As a reviewer, I want to leave inline comments on specific lines of code so my feedback is clear and targeted.
 As a reviewer, I want to annotate sections of a PDF to point out conceptual mistakes.
 As a moderator, I want to flag or remove posts that violate academic integrity guidelines.
+
 
 
 
