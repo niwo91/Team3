@@ -3,23 +3,37 @@
 
 import os
 from flask import Flask, request, jsonify
+from Constants import *
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = {'txt', 'py', 'pdf', 'png', 'jpg', 'jpeg'}
 
+
+# Define allowed file extensions based on flags
+ALLOWED_EXTENSIONS = {}
+if FLAG__FILE_EXTENSION_PY_TXT == 1:
+    ALLOWED_EXTENSIONS = {'txt', 'py'}
+elif FLAG__FILE_EXTENSION_PY_TXT_PDF_IMG == 1:
+    ALLOWED_EXTENSIONS = {'txt', 'py', 'pdf', 'png', 'jpg', 'jpeg'}
+
+# This can redirect to a database or cloud storage in a real implementation
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB max
 
 
 def allowed_file(filename):
+    '''
+    Check if the file has an allowed extension.
+    '''
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 @app.route('/')
 def index():
+    '''
+    Simple HTML form for file upload.
+    '''
     return '''
     <h1>AnonReview File Upload</h1>
     <form method="POST" action="/upload" enctype="multipart/form-data">
@@ -31,12 +45,15 @@ def index():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
+    '''
+    Handle file upload and save it to the server.
+    '''
     if 'file' not in request.files:
         return jsonify({'error': 'No file part in request'}), 400
 
     file = request.files['file']
 
-    if file.filename == '':
+    if file.filename == '' or file.filename is None:
         return jsonify({'error': 'No file selected'}), 400
 
     if not allowed_file(file.filename):
@@ -59,5 +76,5 @@ def list_files():
 
 
 if __name__ == '__main__':
-    print("Starting AnonReview upload server at http://localhost:5000")
+    print("Starting AnonReview upload server local host")
     app.run(debug=True)
