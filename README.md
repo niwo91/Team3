@@ -157,12 +157,13 @@ The team will use Trello to track tasks, sprint progress, and blockers. Tasks wi
 
 ### Sample User Stories
 
-As a student, I want to anonymously upload a code snippet so others can comment on specific lines and help me debug.
-As a student, I want to upload a PDF of my written homework so reviewers can leave comments on particular sections.
-As a student, I want to join a small review group to discuss an assignment with other students.
-As a reviewer, I want to leave inline comments on specific lines of code so my feedback is clear and targeted.
-As a reviewer, I want to annotate sections of a PDF to point out conceptual mistakes.
-As a moderator, I want to flag or remove posts that violate academic integrity guidelines.
+- As a student, I want to anonymously upload a code snippet so others can comment on specific lines and help me debug.
+- As a student, I want to upload a PDF of my written homework so reviewers can leave comments on particular sections.
+- As a student, I want to join a small review group to discuss an assignment with other students.
+- As a reviewer, I want to leave inline comments on specific lines of code so my feedback is clear and targeted.
+- As a reviewer, I want to annotate sections of a PDF to point out conceptual mistakes.
+- As a moderator, I want to flag or remove posts that violate academic integrity guidelines.
+
 
 
 
