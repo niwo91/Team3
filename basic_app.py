@@ -2,12 +2,11 @@
 # Team 3: HomeworkBusters
 
 import os
-from flask import Flask, request, jsonify, render_template
+import sqlite3
+from flask import Flask, request, jsonify, render_template, g
 from Constants import *
 
 app = Flask(__name__)
-
-
 
 # Define allowed file extensions based on flags
 ALLOWED_EXTENSIONS = {}
@@ -21,12 +20,32 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB max
 
-
 def allowed_file(filename):
     '''
     Check if the file has an allowed extension.
     '''
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def get_db():
+    '''
+    Returns db
+    '''
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = sqlite3.connect(DATABASE)
+    return db
+
+@app.teardown_appcontext
+def close_connection(exception):
+    db = getattr(g, '_database', None)
+    if db is not None:
+        db.close()
+
+def query_db(query, args=(), one=False):
+    cur = get_db().execute(query, args)
+    rv = cur.fetchall
+    cur.close()
+    return (rv[0] if rv else None) if one else rv
 
 @app.route('/')
 def index():
@@ -48,7 +67,6 @@ def upload():
         <input type="submit" value="Upload" />
     </form>
     '''
-
 
 @app.route('/upload_file', methods=['POST'])
 def upload_file():
@@ -82,6 +100,14 @@ def list_files():
     return jsonify({'uploaded_files': files})
 
 
+@app.route('/database', methods=['POST', 'GET'])
+def database():
+    if query_db('SELECT body FROM comments'):
+        return "Database Connected"
+    else:
+        return "Database did not connect"
+
+    
 if __name__ == '__main__':
     print("Starting AnonReview upload server local host")
     app.run(debug=True)
