@@ -2,7 +2,7 @@
 # Team 3: HomeworkBusters
 
 import os
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from Constants import *
 
 app = Flask(__name__)
@@ -28,22 +28,29 @@ def allowed_file(filename):
     '''
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-
 @app.route('/')
 def index():
+    '''
+    Basic landing page for project
+    '''
+    return render_template("index.html")
+
+
+@app.route('/upload')
+def upload():
     '''
     Simple HTML form for file upload.
     '''
     return '''
     <h1>AnonReview File Upload</h1>
-    <form method="POST" action="/upload" enctype="multipart/form-data">
+    <form method="POST" action="/upload_file" enctype="multipart/form-data">
         <input type="file" name="file" />
         <input type="submit" value="Upload" />
     </form>
     '''
 
 
-@app.route('/upload', methods=['POST'])
+@app.route('/upload_file', methods=['POST'])
 def upload_file():
     '''
     Handle file upload and save it to the server.
