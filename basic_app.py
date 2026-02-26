@@ -3,8 +3,9 @@
 
 import os
 import sqlite3
-from flask import Flask, request, jsonify, render_template, g
+from flask import Flask, request, jsonify, render_template, g, send_from_directory, url_for
 from forms import LoginForm
+from werkzeug.utils import secure_filename
 from Constants import *
 
 app = Flask(__name__)
@@ -54,7 +55,7 @@ def query_db(query, args=(), one=False):
     @return list with query result
     '''
     cur = get_db().execute(query, args)
-    rv = cur.fetchall
+    rv = cur.fetchall()
     cur.close()
     return (rv[0] if rv else None) if one else rv
 
@@ -68,15 +69,28 @@ def index():
 
 @app.route('/upload')
 def upload():
-    '''
-    Simple HTML form for file upload.
-    '''
-    return '''
-    <h1>AnonReview File Upload</h1>
-    <form method="POST" action="/upload_file" enctype="multipart/form-data">
-        <input type="file" name="file" />
-        <input type="submit" value="Upload" />
-    </form>
+    return f'''
+    <!doctype html>
+    <html>
+    <head>
+        <title>Upload File</title>
+        <link rel="stylesheet" href="{url_for('static', filename='style.css')}">
+    </head>
+    <body>
+        <div class="container">
+            <h1>AnonReview File Upload</h1>
+
+            <form method="POST" action="{url_for('upload_file')}" enctype="multipart/form-data">
+                <input type="file" name="file" />
+                <br><br>
+                <input type="submit" value="Upload" />
+            </form>
+
+            <br>
+            <a href="{url_for('index')}">Back to Home</a>
+        </div>
+    </body>
+    </html>
     '''
 
 @app.route('/upload_file', methods=['POST'])
@@ -94,22 +108,154 @@ def upload_file():
 
     if not allowed_file(file.filename):
         return jsonify({'error': f'File type not allowed. Allowed types: {ALLOWED_EXTENSIONS}'}), 400
+    
+    filename = secure_filename(file.filename)
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    
 
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-    file.save(filepath)
+    ##  warning: THIS NEEDS TO CHANGE WHEN DATA BASE 
+    if FUNCTIONAL_DATABASE_PUSHED == 1:
+        #  Save metadata to DB
+        db = get_db()
+        db.execute(
+            "INSERT INTO files (filename, filepath) VALUES (?, ?)",
+            (filename, filepath)
+        )
+        db.commit()
+    else:
+        print("File saved to server, but database interactions not implemented yet.")
+        file.save(filepath)
 
-    return jsonify({
-        'message': 'File uploaded successfully!',
-        'filename': file.filename,
-        'saved_to': filepath
-    }), 200
+    return f'''
+        <!doctype html>
+        <html>
+        <head>
+            <title>Upload Success</title>
+            <link rel="stylesheet" href="{url_for('static', filename='style.css')}">
+        </head>
+        <body>
+            <div class="container">
+                <h2>File Uploaded Successfully!</h2>
+                <p>Filename: {filename}</p>
+                <a href="{url_for('list_files')}">View Uploaded Files</a>
+                <br><br>
+                <a href="{url_for('upload')}">Upload Another File</a>
+            </div>
+        </body>
+        </html>
+        '''
 
+@app.route('/files/<int:file_id>')
+def get_file(file_id):
 
-@app.route('/files', methods=['GET'])
+    # DB mode
+    if FUNCTIONAL_DATABASE_PUSHED == 1:
+        row = query_db(
+            "SELECT filename FROM files WHERE id = ?",
+            (file_id,),
+            one=True
+        )
+
+        if not row:
+            return "File not found in database", 404
+
+        filename = row[0]
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+        if os.path.exists(filepath):
+            return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+        return "File missing on disk", 404
+
+    # Dev fallback mode (no DB)
+    else:
+        files = sorted(os.listdir(app.config['UPLOAD_FOLDER']))
+
+        if 0 <= file_id - 1 < len(files):
+            filename = files[file_id - 1]
+            return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+        return "File not found", 404
+
+    
+
+@app.route('/files')
 def list_files():
-    files = os.listdir(UPLOAD_FOLDER)
-    return jsonify({'uploaded_files': files})
 
+    html = f'''
+    <!doctype html>
+    <html>
+    <head>
+        <title>Uploaded Files</title>
+        <link rel="stylesheet" href="{url_for('static', filename='style.css')}">
+    </head>
+    <body>
+    <div class="container">
+    <h1>Uploaded Files</h1>
+    <ul>
+    '''
+
+    # DB mode
+    if FUNCTIONAL_DATABASE_PUSHED == 1:
+        rows = query_db("SELECT id, filename FROM files")
+
+        for file_id, filename in rows:
+            html += f'<li><a href="{url_for("get_file", file_id=file_id)}">{filename}</a></li>'
+
+    # Dev mode
+    else:
+        files = sorted(os.listdir(app.config['UPLOAD_FOLDER']))
+
+        for index, filename in enumerate(files, start=1):
+            html += f'<li><a href="{url_for("get_file", file_id=index)}">{filename}</a></li>'
+
+    html += f'''
+    </ul>
+    <br>
+    <a href="{url_for('upload')}">Upload Another File</a>
+    <br><br>
+    <a href="{url_for('index')}">Back to Home</a>
+    </div>
+    </body>
+    </html>
+    '''
+
+    return html
+
+@app.route('/view/<filename>')
+def view_file(filename):
+
+    safe_name = secure_filename(filename)
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], safe_name)
+
+    if not os.path.exists(filepath):
+        return "File not found", 404
+
+    # If text file → display content
+    if safe_name.endswith(('.txt', '.py')):
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        return f'''
+            <!doctype html>
+            <html>
+            <head>
+                <title>Viewing {safe_name}</title>
+                <link rel="stylesheet" href="{url_for('static', filename='style.css')}">
+            </head>
+            <body>
+                <div class="container">
+                    <h2>Viewing: {safe_name}</h2>
+                    <pre>{content}</pre>
+                    <br>
+                    <a href="{url_for('list_files')}">Back to File List</a>
+                </div>
+            </body>
+            </html>
+            '''
+
+    # If image or pdf → render directly
+    return send_from_directory(app.config['UPLOAD_FOLDER'], safe_name)
 
 @app.route('/database', methods=['POST', 'GET'])
 def database():

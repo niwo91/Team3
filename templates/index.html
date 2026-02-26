@@ -1,21 +1,30 @@
 <!doctype html>
 <html lang="en-US">
-  	<head>
-    		<meta charset="utf-8" />
-    		<title>AnonReview</title>
-  	</head>
-  	<body>
-		<p><h1>AnonReview Basic App</h1></p>
-		<list>
-		<p>
-		<a href="/upload" title="Upload files">This is a link to the upload file page</a>
-		</p>
-		<p>
-		<a href="/files" title="Downloaded files">This is a link to the downloaded files</a>
-		</p>
-		<p>
-		<a href="/database" title="Database">This is a link to the database page</a>
-		</p>
+	<head>
+		<meta charset="utf-8" />
+		<title>AnonReview</title>
+		<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+	</head>
+	<body>
+		<div class="container">
 
+			<h1>AnonReview</h1>
+			<p class="subtitle">Team 3 – HomeworkBusters</p>
+
+			<ul class="nav-links">
+				<li>
+					<a href="{{ url_for('upload') }}">Upload a File</a>
+				</li>
+
+				<li>
+					<a href="{{ url_for('list_files') }}">View Uploaded Files</a>
+				</li>
+
+				<li>
+					<a href="{{ url_for('database') }}">Database Status</a>
+				</li>
+			</ul>
+
+		</div>
 	</body>
 </html>

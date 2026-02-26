@@ -8,3 +8,4 @@ FLAG__FILE_EXTENSION_PY_TXT           = 1               # Python and Text files 
 FLAG__FILE_EXTENSION_PY_TXT_PDF_IMG   = 0               # Python, Text, PDF, and Image files for initialization
 UPLOAD_FOLDER                         = 'uploads'       # Directory to save uploaded files
 DATABASE                              = 'anonreview.db' # Path to Database
+FUNCTIONAL_DATABASE_PUSHED            = 0               # Flag to indicate if functional database interactions have been implemented
