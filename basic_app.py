@@ -28,7 +28,7 @@ def allowed_file(filename):
 
 def get_db():
     '''
-    Returns db
+    Connects to db, or returns active db if already connected
     '''
     db = getattr(g, '_database', None)
     if db is None:
@@ -37,11 +37,21 @@ def get_db():
 
 @app.teardown_appcontext
 def close_connection(exception):
+    '''
+    Closes connection to db
+    '''
     db = getattr(g, '_database', None)
     if db is not None:
         db.close()
 
 def query_db(query, args=(), one=False):
+    '''
+    Used to query DB
+    @param query The sqlite3 query for the database
+    @param args A list of arguments to be used in query - replaces ? in query
+    @param one Bool for returning one value or not
+    @return list with query result
+    '''
     cur = get_db().execute(query, args)
     rv = cur.fetchall
     cur.close()
