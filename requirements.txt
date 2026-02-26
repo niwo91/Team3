@@ -1,5 +1,4 @@
 Flask
 Werkzeug
-sqlite3
 Flask-WTF==1.2.2
 WTForms==3.2.1
