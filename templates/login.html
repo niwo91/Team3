@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <h1>Welcome to AnonReview!</h1>
+
+    <h2>Log In</h2>
+
+    <form method="post" action="">
+
+            <div>{{ form.user_name.label }}: {{ form.user_name() }}</div><br>
+            <div>{{ form.password.label }}: {{form.password() }}</div><br>
+            <div>{{ form.submit() }}</div><br>
+        
+    </form>
+
+    <a href="{{ url_for('register') }}">Don't have an account? Register!</a>
+    
+</body>
+</html>

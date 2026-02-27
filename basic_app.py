@@ -4,7 +4,7 @@
 import os
 import sqlite3
 from flask import Flask, request, jsonify, render_template, g, send_from_directory, url_for
-from forms import LoginForm
+from forms import LoginForm, RegistrationForm
 from werkzeug.utils import secure_filename
 from Constants import *
 
@@ -21,6 +21,7 @@ elif FLAG__FILE_EXTENSION_PY_TXT_PDF_IMG == 1:
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB max
+
 
 def allowed_file(filename):
     '''
@@ -66,6 +67,15 @@ def index():
     '''
     return render_template("index.html")
 
+#route for login page, renders login.html by matching form to LoginForm
+@app.route('/login')
+def login():
+    return render_template("login.html", form=LoginForm())
+
+#route for registration page, renders registration.html by matching form to RegistrationForm
+@app.route('/register')
+def register():
+    return render_template("register.html", form=RegistrationForm())
 
 @app.route('/upload')
 def upload():
