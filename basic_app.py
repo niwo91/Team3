@@ -3,10 +3,14 @@
 
 import os
 import sqlite3
+from dotenv import load_dotenv
 from flask import Flask, request, jsonify, render_template, g, send_from_directory, url_for
 from forms import LoginForm, RegistrationForm
 from werkzeug.utils import secure_filename
 from Constants import *
+
+#reads from the .env file (should be in root of LOCAL repo)
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -21,6 +25,7 @@ elif FLAG__FILE_EXTENSION_PY_TXT_PDF_IMG == 1:
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB max
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 
 
 def allowed_file(filename):
