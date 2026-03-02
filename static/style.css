@@ -79,3 +79,20 @@ pre {
     white-space: pre-wrap;
     color: #e5e7eb;
 }
+
+/* Tables */
+table{
+    border: 1px solid white;
+}
+
+th{
+    border: 1px solid white;
+}
+
+tr{
+    border: 1px solid white;
+}
+
+td{
+    border: 1px solid white;
+}

@@ -41,6 +41,7 @@ def get_db():
     db = getattr(g, '_database', None)
     if db is None:
         db = g._database = sqlite3.connect(DATABASE)
+    db.row_factory = sqlite3.Row
     return db
 
 @app.teardown_appcontext
@@ -64,6 +65,7 @@ def query_db(query, args=(), one=False):
     rv = cur.fetchall()
     cur.close()
     return (rv[0] if rv else None) if one else rv
+
 
 @app.route('/')
 def index():
@@ -272,12 +274,10 @@ def view_file(filename):
     # If image or pdf → render directly
     return send_from_directory(app.config['UPLOAD_FOLDER'], safe_name)
 
-@app.route('/database', methods=['POST', 'GET'])
-def database():
-    if query_db('SELECT body FROM comments'):
-        return "Database Connected"
-    else:
-        return "Database did not connect"
+@app.route('/categories', methods=['POST', 'GET'])
+def categories():
+    data = query_db('SELECT * FROM categories')
+    return render_template("categories.html", data=data) 
 
     
 if __name__ == '__main__':
