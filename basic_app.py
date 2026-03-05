@@ -170,21 +170,21 @@ def upload_file():
         </html>
         '''
 
-@app.route('/files/<int:file_id>')
-def get_file(file_id):
+@app.route('/files/<int:post_id>')
+def get_file(post_id):
 
-    # DB mode
     if FUNCTIONAL_DATABASE_PUSHED == 1:
+
         row = query_db(
-            "SELECT filename FROM files WHERE id = ?",
-            (file_id,),
+            "SELECT attachment_path FROM posts WHERE post_id = ?",
+            (post_id,),
             one=True
         )
 
         if not row:
             return "File not found in database", 404
 
-        filename = row[0]
+        filename = row["attachment_path"]
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
         if os.path.exists(filepath):
@@ -192,12 +192,13 @@ def get_file(file_id):
 
         return "File missing on disk", 404
 
-    # Dev fallback mode (no DB)
+
     else:
+
         files = sorted(os.listdir(app.config['UPLOAD_FOLDER']))
 
-        if 0 <= file_id - 1 < len(files):
-            filename = files[file_id - 1]
+        if 0 <= post_id - 1 < len(files):
+            filename = files[post_id - 1]
             return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
         return "File not found", 404
@@ -222,10 +223,9 @@ def list_files():
 
     # DB mode
     if FUNCTIONAL_DATABASE_PUSHED == 1:
-        rows = query_db("SELECT id, filename FROM files")
-
-        for file_id, filename in rows:
-            html += f'<li><a href="{url_for("get_file", file_id=file_id)}">{filename}</a></li>'
+        rows = query_db("SELECT post_id, title FROM posts")
+        for row in rows:
+            html += f'<li><a href="{url_for("view_post", post_id=row["post_id"])}">{row["title"]}</a></li>'
 
     # Dev mode
     else:
