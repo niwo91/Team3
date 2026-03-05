@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+<head>
+    <title>{{ filename }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>{{ filename }}</h2>
+
+<table class="code-view">
+
+{% for line in lines %}
+
+<tr>
+
+<td class="line-number">
+{{ loop.index }}
+</td>
+
+<td class="code-line">
+<pre>{{ line }}</pre>
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+<br>
+
+<a href="{{ url_for('list_files') }}">Back to Files</a>
+
+</div>
+
+</body>
+</html>

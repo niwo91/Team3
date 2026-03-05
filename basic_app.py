@@ -134,10 +134,18 @@ def upload_file():
     if FUNCTIONAL_DATABASE_PUSHED == 1:
         #  Save metadata to DB
         db = get_db()
-        db.execute(
-            "INSERT INTO files (filename, filepath) VALUES (?, ?)",
-            (filename, filepath)
-        )
+        db.execute("""
+            INSERT INTO posts
+            (user_id, title, body, attachment_path, attachment_type)
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            1,                    # temporary user id
+            filename,
+            "Uploaded file",
+            filepath,
+            file.filename.split('.')[-1]
+        ))
+
         db.commit()
     else:
         print("File saved to server, but database interactions not implemented yet.")
@@ -224,7 +232,7 @@ def list_files():
         files = sorted(os.listdir(app.config['UPLOAD_FOLDER']))
 
         for index, filename in enumerate(files, start=1):
-            html += f'<li><a href="{url_for("get_file", file_id=index)}">{filename}</a></li>'
+            html += f'<li><a href="{url_for("view_file", filename=filename)}">{filename}</a></li>'
 
     html += f'''
     </ul>
@@ -251,27 +259,15 @@ def view_file(filename):
     # If text file → display content
     if safe_name.endswith(('.txt', '.py')):
         with open(filepath, 'r', encoding='utf-8') as f:
-            content = f.read()
+            content = f.readlines()
 
-        return f'''
-            <!doctype html>
-            <html>
-            <head>
-                <title>Viewing {safe_name}</title>
-                <link rel="stylesheet" href="{url_for('static', filename='style.css')}">
-            </head>
-            <body>
-                <div class="container">
-                    <h2>Viewing: {safe_name}</h2>
-                    <pre>{content}</pre>
-                    <br>
-                    <a href="{url_for('list_files')}">Back to File List</a>
-                </div>
-            </body>
-            </html>
-            '''
+        return render_template(
+        "view_file.html",
+        filename=safe_name,
+        lines=content
+    )
 
-    # If image or pdf → render directly
+    # If image or pdf render directly
     return send_from_directory(app.config['UPLOAD_FOLDER'], safe_name)
 
 @app.route('/categories', methods=['POST', 'GET'])
