@@ -4,7 +4,7 @@
 import os
 import sqlite3
 from dotenv import load_dotenv
-from flask import Flask, request, jsonify, render_template, g, send_from_directory, url_for
+from flask import Flask, request, jsonify, render_template, g, send_from_directory, url_for, flash, redirect
 from forms import LoginForm, RegistrationForm
 from werkzeug.utils import secure_filename
 from Constants import *
@@ -75,9 +75,26 @@ def index():
     return render_template("index.html")
 
 #route for login page, renders login.html by matching form to LoginForm
-@app.route('/login')
+@app.route('/login', methods=['POST', 'GET'])
 def login():
-    return render_template("login.html", form=LoginForm())
+    form = LoginForm()
+    if form.validate_on_submit():
+
+        user = query_db('SELECT * FROM users WHERE username = ?', [form.user_name.data], one = False)
+        pswd = query_db('SELECT * FROM users WHERE password_hash = ?', [form.password.data], one = False)
+
+        #make sure request method is POST
+        if user == None or pswd == None:
+            #flash message and redirect to login
+            return redirect(url_for("login"), form=form, invalid_login=True)
+    
+        else:
+            #send user to dashboard
+            return render_template("login.html", form=form, log_in_user=False)
+
+
+    
+    return render_template("login.html", form=form, log_in_user=False)
 
 #route for registration page, renders registration.html by matching form to RegistrationForm
 @app.route('/register')

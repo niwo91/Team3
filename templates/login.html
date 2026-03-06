@@ -21,6 +21,12 @@
     </form>
 
     <a href="{{ url_for('register') }}">Don't have an account? Register!</a>
+
+    {% if invalid_login == True %}
+
+    <p>Invalid username or password. Please try again.</p>
+
+    {% endif %}
     
 </body>
 </html>
