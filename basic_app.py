@@ -151,10 +151,18 @@ def upload_file():
     if FUNCTIONAL_DATABASE_PUSHED == 1:
         #  Save metadata to DB
         db = get_db()
-        db.execute(
-            "INSERT INTO files (filename, filepath) VALUES (?, ?)",
-            (filename, filepath)
-        )
+        db.execute("""
+            INSERT INTO posts
+            (user_id, title, body, attachment_path, attachment_type)
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            1,                    # temporary user id
+            filename,
+            "Uploaded file",
+            filepath,
+            file.filename.split('.')[-1]
+        ))
+
         db.commit()
     else:
         print("File saved to server, but database interactions not implemented yet.")
@@ -179,21 +187,21 @@ def upload_file():
         </html>
         '''
 
-@app.route('/files/<int:file_id>')
-def get_file(file_id):
+@app.route('/files/<int:post_id>')
+def get_file(post_id):
 
-    # DB mode
     if FUNCTIONAL_DATABASE_PUSHED == 1:
+
         row = query_db(
-            "SELECT filename FROM files WHERE id = ?",
-            (file_id,),
+            "SELECT attachment_path FROM posts WHERE post_id = ?",
+            (post_id,),
             one=True
         )
 
         if not row:
             return "File not found in database", 404
 
-        filename = row[0]
+        filename = row["attachment_path"]
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
         if os.path.exists(filepath):
@@ -201,12 +209,13 @@ def get_file(file_id):
 
         return "File missing on disk", 404
 
-    # Dev fallback mode (no DB)
+
     else:
+
         files = sorted(os.listdir(app.config['UPLOAD_FOLDER']))
 
-        if 0 <= file_id - 1 < len(files):
-            filename = files[file_id - 1]
+        if 0 <= post_id - 1 < len(files):
+            filename = files[post_id - 1]
             return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
         return "File not found", 404
@@ -231,17 +240,16 @@ def list_files():
 
     # DB mode
     if FUNCTIONAL_DATABASE_PUSHED == 1:
-        rows = query_db("SELECT id, filename FROM files")
-
-        for file_id, filename in rows:
-            html += f'<li><a href="{url_for("get_file", file_id=file_id)}">{filename}</a></li>'
+        rows = query_db("SELECT post_id, title FROM posts")
+        for row in rows:
+            html += f'<li><a href="{url_for("view_post", post_id=row["post_id"])}">{row["title"]}</a></li>'
 
     # Dev mode
     else:
         files = sorted(os.listdir(app.config['UPLOAD_FOLDER']))
 
         for index, filename in enumerate(files, start=1):
-            html += f'<li><a href="{url_for("get_file", file_id=index)}">{filename}</a></li>'
+            html += f'<li><a href="{url_for("view_file", filename=filename)}">{filename}</a></li>'
 
     html += f'''
     </ul>
@@ -268,27 +276,15 @@ def view_file(filename):
     # If text file → display content
     if safe_name.endswith(('.txt', '.py')):
         with open(filepath, 'r', encoding='utf-8') as f:
-            content = f.read()
+            content = f.readlines()
 
-        return f'''
-            <!doctype html>
-            <html>
-            <head>
-                <title>Viewing {safe_name}</title>
-                <link rel="stylesheet" href="{url_for('static', filename='style.css')}">
-            </head>
-            <body>
-                <div class="container">
-                    <h2>Viewing: {safe_name}</h2>
-                    <pre>{content}</pre>
-                    <br>
-                    <a href="{url_for('list_files')}">Back to File List</a>
-                </div>
-            </body>
-            </html>
-            '''
+        return render_template(
+        "view_file.html",
+        filename=safe_name,
+        lines=content
+    )
 
-    # If image or pdf → render directly
+    # If image or pdf render directly
     return send_from_directory(app.config['UPLOAD_FOLDER'], safe_name)
 
 @app.route('/categories', methods=['POST', 'GET'])
