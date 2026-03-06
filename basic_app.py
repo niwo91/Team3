@@ -78,23 +78,23 @@ def index():
 @app.route('/login', methods=['POST', 'GET'])
 def login():
     form = LoginForm()
+    #handles form validation, makes sure request is POST
     if form.validate_on_submit():
 
-        user = query_db('SELECT * FROM users WHERE username = ?', [form.user_name.data], one = False)
-        pswd = query_db('SELECT * FROM users WHERE password_hash = ?', [form.password.data], one = False)
+        user = query_db('SELECT * FROM users WHERE username = ? and password_hash = ?', [form.user_name.data, form.password.data], one=True)
 
-        #make sure request method is POST
-        if user == None or pswd == None:
-            #flash message and redirect to login
-            return redirect(url_for("login"), form=form, invalid_login=True)
-    
+        if user == None:
+            return render_template('login.html', form=form, invalid_login=True)
+
         else:
-            #send user to dashboard
-            return render_template("login.html", form=form, log_in_user=False)
+            return redirect("/dashboard")
 
+    return render_template('login.html', form=form, invalid_login=False)
 
-    
-    return render_template("login.html", form=form, log_in_user=False)
+#route for user's dashboard, accessible if login successful
+@app.route('/dashboard', methods=['POST', 'GET'])
+def dashboard():
+    return render_template("dashboard.html")
 
 #route for registration page, renders registration.html by matching form to RegistrationForm
 @app.route('/register')

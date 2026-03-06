@@ -14,6 +14,8 @@
 
     <form method="post" action="">
 
+            {{ form.hidden_tag() }}
+
             <div>{{ form.user_name.label }}: {{ form.user_name() }}</div><br>
             <div>{{ form.password.label }}: {{form.password() }}</div><br>
             <div>{{ form.submit() }}</div><br>
@@ -24,9 +26,10 @@
 
     {% if invalid_login == True %}
 
-    <p>Invalid username or password. Please try again.</p>
+    <p>Please enter a valid username and password.</p>
 
     {% endif %}
+
     
 </body>
 </html>
