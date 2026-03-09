@@ -24,15 +24,16 @@ CREATE TABLE categories (
 
 -- Posts table
 CREATE TABLE posts (
-    post_id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id         INTEGER NOT NULL,
-    category_id     INTEGER,
-    title           TEXT NOT NULL,
-    body            TEXT NOT NULL,
+    post_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    category_id INTEGER,
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
     attachment_path TEXT,
     attachment_type TEXT,
-    created_at      TEXT DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TEXT DEFAULT CURRENT_TIMESTAMP,
+    anon_name TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (category_id) REFERENCES categories(category_id)
 );
