@@ -289,6 +289,9 @@ def view_file(filename):
     if not os.path.exists(filepath):
         return "File not found", 404
 
+    # Get comments
+    post_comments = query_db('SELECT body FROM comments WHERE post_id = (SELECT post_id FROM posts WHERE attachment_path = ?)', (filename,))
+
     # If text file → display content
     if safe_name.endswith(('.txt', '.py')):
         with open(filepath, 'r', encoding='utf-8') as f:
@@ -297,7 +300,8 @@ def view_file(filename):
         return render_template(
         "view_file.html",
         filename=safe_name,
-        lines=content
+        lines=content,
+        comments=post_comments
     )
 
     # If image or pdf render directly
@@ -307,6 +311,19 @@ def view_file(filename):
 def categories():
     data = query_db('SELECT * FROM categories')
     return render_template("categories.html", data=data) 
+
+@app.route('/submit_form', methods=["POST"])
+def submit_form():
+    comment = request.form.get("comment")
+    filename = request.form.get("filename")
+    ## Will need to be updated to allow for user ids, etc with database
+    db = get_db()
+    query_db(
+            'INSERT INTO comments (post_id, user_id, body, comment_anchor, created_at) VALUES (?, ?, ?, ?, ?)', 
+            [2, 1, comment, 'a', '1/1/2001'], 
+            one=True)
+    db.commit()
+    return view_file(filename)
 
     
 if __name__ == '__main__':

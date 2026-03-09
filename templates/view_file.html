@@ -31,6 +31,20 @@
 
 </table>
 
+<h2>Comments</h2>
+<ul>
+	{% for comment in comments %}
+	<li>{{ comment }}</li>
+	{% endfor %}
+</ul>
+
+<form action="/submit_form" method="POST">
+    	<textarea id="comment" name="comment" placeholder="Leave a comment..." required></textarea>
+	<input type="hidden" value={{filename}} name="filename"/>
+	<br>
+    	<button type="submit">Post Comment</button>
+</form>
+
 <br>
 
 <a href="{{ url_for('list_files') }}">Back to Files</a>
