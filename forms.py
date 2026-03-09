@@ -2,7 +2,7 @@
 for creating posts and file uploads later on?'''
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField
+from wtforms import StringField, PasswordField, SubmitField, SelectField, EmailField
 from wtforms.validators import DataRequired, Length
 
 '''Creating the LoginForm and RegistrationForm classes with fields for data entry
@@ -21,5 +21,7 @@ class RegistrationForm(FlaskForm):
 
     user_name = StringField("Username", validators=[DataRequired()])
     password = PasswordField("Password", validators=[DataRequired(), Length(min=10, message="Password is too short")])
+    email = EmailField("Email", validators=[DataRequired()])
+    role = SelectField("Role", choices=['student', 'teacher', 'admin', 'moderator'])
     submit = SubmitField("Register")
 

@@ -80,7 +80,6 @@ def login():
     form = LoginForm()
     #handles form validation, makes sure request is POST
     if form.validate_on_submit():
-
         user = query_db('SELECT * FROM users WHERE username = ? and password_hash = ?', [form.user_name.data, form.password.data], one=True)
 
         if user == None:
