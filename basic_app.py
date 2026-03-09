@@ -4,7 +4,7 @@
 import os
 import sqlite3
 from dotenv import load_dotenv
-from flask import Flask, request, jsonify, render_template, g, send_from_directory, url_for, flash, redirect
+from flask import Flask, request, jsonify, render_template, g, send_from_directory, url_for, redirect
 from forms import LoginForm, RegistrationForm
 from werkzeug.utils import secure_filename
 from Constants import *
@@ -80,7 +80,7 @@ def login():
     form = LoginForm()
     #handles form validation, makes sure request is POST
     if form.validate_on_submit():
-        user = query_db('SELECT * FROM users WHERE username = ? and password_hash = ?', [form.user_name.data, form.password.data], one=True)
+        user = query_db('SELECT * FROM users WHERE username = ? AND password_hash = ?', [form.user_name.data, form.password.data], one=True)
 
         if user == None:
             return render_template('login.html', form=form, invalid_login=True)
@@ -96,9 +96,27 @@ def dashboard():
     return render_template("dashboard.html")
 
 #route for registration page, renders registration.html by matching form to RegistrationForm
-@app.route('/register')
+@app.route('/register', methods=['POST', 'GET'])
 def register():
-    return render_template("register.html", form=RegistrationForm())
+    form = RegistrationForm()
+    db = get_db()
+
+    if form.validate_on_submit():
+
+        existing_user = query_db('SELECT * FROM users WHERE username = ? OR email = ?', [form.user_name.data, form.email.data], one=True)
+        print(existing_user)
+
+        if existing_user == None:
+            query_db('INSERT INTO users (username, email, password_hash, role) ' \
+            'VALUES (?, ?, ?, ?)', [form.user_name.data, form.email.data, form.password.data, form.role.data])
+            db.commit()
+            
+            return redirect("/login")
+        
+        else:
+            return render_template("register.html", form=form, already_exists = True)
+           
+    return render_template("register.html", form=form, already_exists = False)
 
 @app.route('/upload')
 def upload():
