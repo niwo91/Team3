@@ -104,7 +104,6 @@ def register():
     if form.validate_on_submit():
 
         existing_user = query_db('SELECT * FROM users WHERE username = ? OR email = ?', [form.user_name.data, form.email.data], one=True)
-        print(existing_user)
 
         if existing_user == None:
             query_db('INSERT INTO users (username, email, password_hash, role) ' \
