@@ -379,6 +379,25 @@ def submit_form():
     db.commit()
     return view_file(filename)
 
+@app.route('/add_comment/<int:post_id>', methods=['POST'])
+def add_comment(post_id):
+    user_id = session.get('user_id')
+    body = request.form['body']
+
+    db = get_db()
+
+    pseudonym = anon_name(user_id, post_id)
+
+    db.execute(
+        """
+        INSERT INTO comments (post_id, user_id, body, anon_name)
+        VALUES (?, ?, ?, ?)
+        """,
+        (post_id, user_id, body, pseudonym)
+    )
+    db.commit()
+
+    return redirect(url_for('view_post', post_id=post_id))
     
 if __name__ == '__main__':
     print("Starting AnonReview upload server local host")
