@@ -1,0 +1,15 @@
+<h1>{{ post.title }}</h1>
+<p><strong>{{ post.anon_name }}</strong> wrote:</p>
+<p>{{ post.body }}</p>
+
+<hr>
+
+<h2>Comments</h2>
+{% for c in comments %}
+    <p><strong>{{ c.anon_name }}</strong>: {{ c.body }}</p>
+{% endfor %}
+
+<form method="POST" action="{{ url_for('add_comment', post_id=post.post_id) }}">
+    <textarea name="body" placeholder="Add a comment..." required></textarea><br>
+    <button type="submit">Comment</button>
+</form>

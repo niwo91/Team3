@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+    <meta charset="utf-8" />
+    <title>Dashboard – AnonReview</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+
+        <!-- Top navigation row -->
+        <div class="top-bar">
+            <a class="back-button" href="{{ url_for('index') }}">← Home</a>
+            <a class="create-button" href="{{ url_for('create_post') }}">+ New Post</a>
+        </div>
+
+        <h1>All Posts</h1>
+        <p class="subtitle small-subtitle">Latest activity from the community</p>
+
+        <!-- Expanded post feed -->
+        <div class="post-feed">
+            {% for p in posts %}
+                <div class="post-card">
+                    <h2 class="post-title">
+                        <a href="{{ url_for('view_post', post_id=p.post_id) }}">
+                            {{ p.title }}
+                        </a>
+                    </h2>
+
+                    <p class="post-meta small-text">Posted by {{ p.anon_name }}</p>
+
+                    <p class="post-preview small-text">
+                        {{ p.body[:200] }}{% if p.body|length > 200 %}...{% endif %}
+                    </p>
+
+                    <a class="read-more small-text" href="{{ url_for('view_post', post_id=p.post_id) }}">
+                        Read full post →
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</body>
+</html>

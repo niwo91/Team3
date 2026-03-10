@@ -43,6 +43,7 @@ CREATE TABLE comments (
     comment_id     INTEGER PRIMARY KEY AUTOINCREMENT,
     post_id        INTEGER NOT NULL,
     user_id        INTEGER NOT NULL,
+    anon_name      TEXT,
     body           TEXT NOT NULL,
     comment_anchor TEXT,
     created_at     TEXT DEFAULT CURRENT_TIMESTAMP,

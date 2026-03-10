@@ -4,10 +4,13 @@
 import os
 import sqlite3
 from dotenv import load_dotenv
+from anonymizer import anon_name
+from flask import session, redirect, url_for
 from flask import Flask, request, jsonify, render_template, g, send_from_directory, url_for
 from forms import LoginForm, RegistrationForm
 from werkzeug.utils import secure_filename
 from Constants import *
+from anonymizer import anon_name
 
 #reads from the .env file (should be in root of LOCAL repo)
 load_dotenv()
@@ -277,9 +280,67 @@ def view_file(filename):
 @app.route('/categories', methods=['POST', 'GET'])
 def categories():
     data = query_db('SELECT * FROM categories')
-    return render_template("categories.html", data=data) 
+    return render_template("categories.html", data=data)
 
-    
+@app.route('/create_post', methods=['GET', 'POST'])
+def create_post():
+    if request.method == 'POST':
+        user_id = session.get('user_id')
+        title = request.form['title']
+        body = request.form['body']
+        category_id = request.form.get('category_id')
+
+        db = get_db()
+
+        # Insert post without anon_name first
+        cursor = db.execute(
+            """
+            INSERT INTO posts (user_id, category_id, title, body)
+            VALUES (?, ?, ?, ?)
+            """,
+            (user_id, category_id, title, body)
+        )
+        post_id = cursor.lastrowid
+
+        # Generate pseudonym
+        pseudonym = anon_name(user_id, post_id)
+
+        # Update post with anon_name
+        db.execute(
+            "UPDATE posts SET anon_name = ? WHERE post_id = ?",
+            (pseudonym, post_id)
+        )
+        db.commit()
+
+        return redirect(url_for('view_post', post_id=post_id))
+
+    categories = query_db("SELECT * FROM categories")
+    return render_template("create_post.html", categories=categories)
+
+
+@app.route('/post/<int:post_id>')
+def view_post(post_id):
+    post = query_db(
+        "SELECT * FROM posts WHERE post_id = ?",
+        (post_id,),
+        one=True
+    )
+
+    comments = query_db(
+        "SELECT * FROM comments WHERE post_id = ? ORDER BY created_at ASC",
+        (post_id,)
+    )
+
+    return render_template("view_post.html", post=post, comments=comments)
+
+@app.route('/dashboard')
+def dashboard():
+    posts = query_db(
+        "SELECT * FROM posts ORDER BY created_at DESC LIMIT 20"
+    )
+    return render_template("dashboard.html", posts=posts)
+
+
 if __name__ == '__main__':
     print("Starting AnonReview upload server local host")
     app.run(debug=True)

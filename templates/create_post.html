@@ -1,0 +1,15 @@
+<h1>Create Post</h1>
+
+<form method="POST">
+    <input type="text" name="title" placeholder="Title" required><br><br>
+
+    <textarea name="body" placeholder="Write your post..." required></textarea><br><br>
+
+    <select name="category_id">
+        {% for c in categories %}
+            <option value="{{ c.category_id }}">{{ c.name }}</option>
+        {% endfor %}
+    </select><br><br>
+
+    <button type="submit">Create Post</button>
+</form>
