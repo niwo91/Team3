@@ -136,38 +136,36 @@ None
 
 # 3) Dashboard Page
 
-## Page Title 
+## Page Title
 Dashboard
 
 ## Page Description
-Home page when logged in. Options to view post, interact with post, or add post.
+This is the home page displayed after a user logs in. It allows users to view posts, interact with posts, or create a new post.
 
 ## Page Route
+**Dashboard →** `/dashboard`
 
-**Dashboard** → `/dashboard`
+## Mockup for Dashboard
+![Dashboard](Dashboard.png)
 
-**Mockup for Dashboard**
-![DashBoard|50](Dashboard.png)
+## Route Parameters
+Login → Dashboard  
+Users must be logged in to access the dashboard.
 
-## Route Parameters:
-Login → Dashboard
-Logging in is required to access the dashboard.
-
-## Query Parameters:
+## Query Parameters
 None
 
 ## Link Destinations for Page
-/dashboard
+`/dashboard`
 
 ## Data Required to Render Page
-* Comments
-* Files
-* User created posts
-
+- Comments
+- Files
+- User-created posts
 
 ## Tests for Verifying Rendering of the Page
-* Render pages and posts in the database.
-* Render comments in the database.
+- Render posts stored in the database.
+- Render comments stored in the database.
 
 
 # 4) Create Post Page
@@ -176,69 +174,66 @@ None
 Create Post
 
 ## Page Description
-Allows user to post with a title, a description, file upload, and a category. 
+Allows a user to create a post with a title, description, file upload, and category.
 
 ## Page Route
-/create_post
+`/create_post`
 
-**Mockup for Create Post**
-
-![View_A_post](View_A_Post.png)
-
-## Route Parameters:
-Logged in is manadtory.
-
-## Query Parameters:
-* Query the correct files and posts
-* Query catagories.
-* Query comments. 
-
-## Link Destinations for Page
-* Back to dashboard
-* Submit post
-
-## Data Required to Render Page
-* Catagories defined in database.
-* Comments and files associted with the post in the database. 
-
-
-## Tests for Verifying Rendering of the Page
-Mandate input for title and description. 
-
-# 5) View Single Posts Page
-
-## Page Title 
-Varries - User defined by an input field.
-
-## Page Description
-View another user's post and interact with their question. 
-
-
-## Page Route
-/create_post
-
-
-**Mockup for View All Posts**
+## Mockup for Create Post
 ![View_A_Post](View_A_Post.png)
 
+## Route Parameters
+User must be logged in.
 
-## Route Parameters:
-Log in is manadatory
+## Query Parameters
+- Query posts and files
+- Query categories
+- Query comments
 
-## Query Parameters:
-* Files and comments from database.
-* User hash keys for the comments
+## Link Destinations for Page
+- Back to dashboard
+- Submit post
+
+## Data Required to Render Page
+- Categories defined in the database
+- Comments and files associated with the post in the database
+
+## Tests for Verifying Rendering of the Page
+- Verify title input is required
+- Verify description input is required
+
+
+# 5) View Single Post Page
+
+## Page Title
+Varies – defined by user input (post title)
+
+## Page Description
+Allows a user to view another user’s post and interact with it (e.g., view files and comments).
+
+## Page Route
+`/create_post`
+
+## Mockup for View All Posts
+![View_A_Post](View_A_Post.png)
+
+## Route Parameters
+User must be logged in.
+
+## Query Parameters
+- Files and comments retrieved from the database
+- User hash keys for comments
 
 ## Link Destinations for Page
 Back to dashboard
 
 ## Data Required to Render Page
-* Files and comments from database.
-* User hash keys for the comments
+- Files associated with the post
+- Comments associated with the post
+- User hash keys for comment authors
 
 ## Tests for Verifying Rendering of the Page
-* verify the file shows correctly.
-* Verify the username hashes.
-* Verify comments are correct.
-
+- Verify the file displays correctly
+- Verify username hashes display correctly
+- Verify comments render correctly
 
