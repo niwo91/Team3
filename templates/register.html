@@ -14,13 +14,23 @@
 
     <form method="post" action="">
 
+            {{ form.hidden_tag() }}
+
             <div>{{ form.user_name.label }}: {{ form.user_name() }}</div> <br>
             <div>{{ form.password.label }}: {{form.password() }}</div> <br>
+            <div>{{ form.email.label }}: {{ form.email() }}</div> <br>
+            <div>{{ form.role.label }}: {{form.role() }}</div> <br>
             <div>{{ form.submit() }}</div> <br>
         
     </form>
 
     <a href="{{ url_for('login') }}">Already have an account? Log in!</a>
+
+    {% if already_exists %}
+
+    <p>Account with this username or email already exists.</p>
+
+    {% endif %}
     
 </body>
 </html>

@@ -1,0 +1,4 @@
+venvfaisalshahin@Faisals-MacBook-Air Homework % /Users/faisalshahin/Documents/CU_Boulder/CSPB_4830_NLP/Week2/Homework/venv/bin/python /Users/faisalshahin/Documents/CU_Boulder/CSPB_4830_NLP/Week2/Homework/problem4.py
+a) The five most frequent bigrams are: [((',', 'and'), 945), (('”', '“'), 723), (('.', '“'), 668), (('.', 'I'), 475), (('of', 'the'), 429)]
+b) The five most common words that come after the word 'the' are: [(('the', 'world'), 64), (('the', 'room'), 58), (('the', 'door'), 55), (('the', 'man'), 42), (('the', 'table'), 41)]
+venvfaisalshahin@Faisals-MacBook-Air Homework % 

@@ -87,30 +87,30 @@ input[type="submit"]:hover {
 /* File viewer */
 pre {
     background: #111827;
-    padding: 20px;
-    border-radius: 8px;
+    padding: 4px 8px;
+    margin: 0;
+    border-radius: 6px;
     overflow-x: auto;
     white-space: pre-wrap;
     color: #e5e7eb;
+    font-size: 13px;
+    line-height: 1.3;
 }
 
 /* Tables */
-table{
-    border: 1px solid white;
+table {
+    border-collapse: collapse;
 }
 
-th{
-    border: 1px solid white;
+td, th {
+    border: none;
+    padding: 1px 6px;
 }
-
-tr{
-    border: 1px solid white;
+.code-view {
+    max-height: 500px;
+    overflow-y: auto;
+    display: block;
 }
-
-td{
-    border: 1px solid white;
-}
-
 
 /* Back button (top-left) */
 .back-button {
@@ -119,3 +119,13 @@ td{
     text-decoration: none;
     font-weight: bold;
 }
+
+.line-number {
+    color: #6b7280;
+    text-align: right;
+    padding-right: 12px;
+    width: 40px;
+    font-size: 12px;
+    user-select: none;
+}
+

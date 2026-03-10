@@ -1,12 +1,10 @@
 # AnonReview - Flask File Upload App
 # Team 3: HomeworkBusters
-
 import os
 import sqlite3
 from dotenv import load_dotenv
-from anonymizer import anon_name
-from flask import session, redirect, url_for
-from flask import Flask, request, jsonify, render_template, g, send_from_directory, url_for
+
+from flask import Flask, request, jsonify, render_template, g, send_from_directory, url_for, redirect, session
 from forms import LoginForm, RegistrationForm
 from werkzeug.utils import secure_filename
 from Constants import *
@@ -78,14 +76,47 @@ def index():
     return render_template("index.html")
 
 #route for login page, renders login.html by matching form to LoginForm
-@app.route('/login')
+@app.route('/login', methods=['POST', 'GET'])
 def login():
-    return render_template("login.html", form=LoginForm())
+    form = LoginForm()
+    #handles form validation, makes sure request is POST
+    if form.validate_on_submit():
+        user = query_db('SELECT * FROM users WHERE username = ? AND password_hash = ?', [form.user_name.data, form.password.data], one=True)
+
+        if user == None:
+            return render_template('login.html', form=form, invalid_login=True)
+
+        else:
+            return redirect("/dashboard")
+
+    return render_template('login.html', form=form, invalid_login=False)
+
+#route for user's dashboard, accessible if login successful
+@app.route('/dashboard', methods=['POST', 'GET'])
+def dashboard():
+    return render_template("dashboard.html")
 
 #route for registration page, renders registration.html by matching form to RegistrationForm
-@app.route('/register')
+@app.route('/register', methods=['POST', 'GET'])
 def register():
-    return render_template("register.html", form=RegistrationForm())
+    form = RegistrationForm()
+    db = get_db()
+
+    if form.validate_on_submit():
+
+        existing_user = query_db('SELECT * FROM users WHERE username = ? OR email = ?', [form.user_name.data, form.email.data], one=True)
+
+        if existing_user == None:
+            query_db('INSERT INTO users (username, email, password_hash, role) ' \
+            'VALUES (?, ?, ?, ?)', [form.user_name.data, form.email.data, form.password.data, form.role.data])
+            db.commit()
+            
+            return redirect("/login")
+        
+        else:
+            return render_template("register.html", form=form, already_exists = True)
+           
+    return render_template("register.html", form=form, already_exists = False)
 
 @app.route('/upload')
 def upload():
@@ -137,10 +168,18 @@ def upload_file():
     if FUNCTIONAL_DATABASE_PUSHED == 1:
         #  Save metadata to DB
         db = get_db()
-        db.execute(
-            "INSERT INTO files (filename, filepath) VALUES (?, ?)",
-            (filename, filepath)
-        )
+        db.execute("""
+            INSERT INTO posts
+            (user_id, title, body, attachment_path, attachment_type)
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            1,                    # temporary user id
+            filename,
+            "Uploaded file",
+            filepath,
+            file.filename.split('.')[-1]
+        ))
+
         db.commit()
     else:
         print("File saved to server, but database interactions not implemented yet.")
@@ -165,21 +204,21 @@ def upload_file():
         </html>
         '''
 
-@app.route('/files/<int:file_id>')
-def get_file(file_id):
+@app.route('/files/<int:post_id>')
+def get_file(post_id):
 
-    # DB mode
     if FUNCTIONAL_DATABASE_PUSHED == 1:
+
         row = query_db(
-            "SELECT filename FROM files WHERE id = ?",
-            (file_id,),
+            "SELECT attachment_path FROM posts WHERE post_id = ?",
+            (post_id,),
             one=True
         )
 
         if not row:
             return "File not found in database", 404
 
-        filename = row[0]
+        filename = row["attachment_path"]
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
         if os.path.exists(filepath):
@@ -187,12 +226,13 @@ def get_file(file_id):
 
         return "File missing on disk", 404
 
-    # Dev fallback mode (no DB)
+
     else:
+
         files = sorted(os.listdir(app.config['UPLOAD_FOLDER']))
 
-        if 0 <= file_id - 1 < len(files):
-            filename = files[file_id - 1]
+        if 0 <= post_id - 1 < len(files):
+            filename = files[post_id - 1]
             return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
         return "File not found", 404
@@ -217,17 +257,16 @@ def list_files():
 
     # DB mode
     if FUNCTIONAL_DATABASE_PUSHED == 1:
-        rows = query_db("SELECT id, filename FROM files")
-
-        for file_id, filename in rows:
-            html += f'<li><a href="{url_for("get_file", file_id=file_id)}">{filename}</a></li>'
+        rows = query_db("SELECT post_id, title FROM posts")
+        for row in rows:
+            html += f'<li><a href="{url_for("view_post", post_id=row["post_id"])}">{row["title"]}</a></li>'
 
     # Dev mode
     else:
         files = sorted(os.listdir(app.config['UPLOAD_FOLDER']))
 
         for index, filename in enumerate(files, start=1):
-            html += f'<li><a href="{url_for("get_file", file_id=index)}">{filename}</a></li>'
+            html += f'<li><a href="{url_for("view_file", filename=filename)}">{filename}</a></li>'
 
     html += f'''
     </ul>
@@ -251,30 +290,22 @@ def view_file(filename):
     if not os.path.exists(filepath):
         return "File not found", 404
 
+    # Get comments
+    post_comments = query_db('SELECT body FROM comments WHERE post_id = (SELECT post_id FROM posts WHERE attachment_path = ?)', (filename,))
+
     # If text file → display content
     if safe_name.endswith(('.txt', '.py')):
         with open(filepath, 'r', encoding='utf-8') as f:
-            content = f.read()
+            content = f.readlines()
 
-        return f'''
-            <!doctype html>
-            <html>
-            <head>
-                <title>Viewing {safe_name}</title>
-                <link rel="stylesheet" href="{url_for('static', filename='style.css')}">
-            </head>
-            <body>
-                <div class="container">
-                    <h2>Viewing: {safe_name}</h2>
-                    <pre>{content}</pre>
-                    <br>
-                    <a href="{url_for('list_files')}">Back to File List</a>
-                </div>
-            </body>
-            </html>
-            '''
+        return render_template(
+        "view_file.html",
+        filename=safe_name,
+        lines=content,
+        comments=post_comments
+    )
 
-    # If image or pdf → render directly
+    # If image or pdf render directly
     return send_from_directory(app.config['UPLOAD_FOLDER'], safe_name)
 
 @app.route('/categories', methods=['POST', 'GET'])
@@ -340,7 +371,20 @@ def dashboard():
     )
     return render_template("dashboard.html", posts=posts)
 
+@app.route('/submit_form', methods=["POST"])
+def submit_form():
+    comment = request.form.get("comment")
+    filename = request.form.get("filename")
+    ## Will need to be updated to allow for user ids, etc with database
+    db = get_db()
+    query_db(
+            'INSERT INTO comments (post_id, user_id, body, comment_anchor, created_at) VALUES (?, ?, ?, ?, ?)', 
+            [2, 1, comment, 'a', '1/1/2001'], 
+            one=True)
+    db.commit()
+    return view_file(filename)
 
+    
 if __name__ == '__main__':
     print("Starting AnonReview upload server local host")
     app.run(debug=True)
