@@ -147,7 +147,7 @@ Home page when logged in. Options to view post, interact with post, or add post.
 **Dashboard** → `/dashboard`
 
 **Mockup for Dashboard**
-![DashBoard](Dashboard.png)
+![DashBoard|50](Dashboard.png)
 
 ## Route Parameters:
 Login → Dashboard
