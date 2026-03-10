@@ -91,11 +91,6 @@ def login():
 
     return render_template('login.html', form=form, invalid_login=False)
 
-#route for user's dashboard, accessible if login successful
-@app.route('/dashboard', methods=['POST', 'GET'])
-def dashboard():
-    return render_template("dashboard.html")
-
 #route for registration page, renders registration.html by matching form to RegistrationForm
 @app.route('/register', methods=['POST', 'GET'])
 def register():
