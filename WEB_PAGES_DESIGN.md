@@ -202,17 +202,18 @@ Mandate input for title and description.
 # 5) View Single Posts Page
 
 ## Page Title 
-
+User defined by an input field (varies)
 
 ## Page Description
+View another user's post and interact with their question. 
 
 
 ## Page Route
-
+/ 
 
 
 **Mockup for View All Posts**
-
+![View_A_Post](View_A_Post.png)
 
 
 ## Route Parameters:
