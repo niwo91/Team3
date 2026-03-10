@@ -67,3 +67,52 @@ The Team is using Trello(jira) to track [project status](https://team-3-project.
 ### Notes
 This file will be updated weekly as the project progresses. Earlier weekly entries may be retained below or moved to an archive directory if
 the file grows large.
+---
+### Reporting Period
+**Week:** 3
+**Meeting Held:** 
+**Meeting Date:** March 9th, 2026
+**Meeting Duration: 40 minutes** 
+**Meeting Format:** Zoom
+
+### Progress Since Last Week
+* Log in and register functionality
+* Dashboard
+* Comment functionality
+* files viewable in HTML
+---
+### Completed Tasks
+* Log in and register functionality
+* Dashboard
+* Comment functionality
+* files viewable in HTML
+---
+### Planned Tasks for Next Week
+* Work on authentication. Flask log in extension based work. 
+* Improve website navigation. 
+* Updating file path to a file section. 
+* TO DO FS 
+---
+### Blockers and Issues
+* Lack of posts.
+* Database planning.
+---
+### Risks and Mitigation
+**Identified Risk: Clashes with merging**
+- Mitigation: Seperate basic_app.py into multiple files
+**Identified Risk: Database connectivity**
+- Mitigation: Finalize database structure. Upload files into the database. 
+---
+### Team Reflection
+* Better communicated branch and merge.
+* Epic one is done.
+---
+### Individual Contributions This Week
+- Nandini: Log in and registration functionality. Finished connecting log in and connection to database. Updated registration fields to connect to database.
+- Nick: Created a basic comment section, comments upload to database. Basic implementation since no post id's are intigrated with the database yet. 
+- Faisal: Broke up the uploaded files into html text so it is interactable. Started conecctino to database but not fully tested.  
+- Adeline: Created the ananomizer function. Made a post section to connect to comments, files, and dashboard. Not fully tested, block until team commits are done. 
+---
+### Notes
+This file will be updated weekly as the project progresses. Earlier weekly entries may be retained below or moved to an archive directory if
+the file grows large.
