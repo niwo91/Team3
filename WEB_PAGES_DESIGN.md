@@ -183,6 +183,7 @@ Allows user to post with a title, a description, file upload, and a category.
 
 **Mockup for Create Post**
 
+![View_A_post](View_A_Post.png)
 
 ## Route Parameters:
 Logged in is manadtory
@@ -191,7 +192,9 @@ Logged in is manadtory
 None.
 
 ## Link Destinations for Page
-/create_post
+* Back to dashboard
+* Submit post
+
 
 ## Data Required to Render Page
 Catagories defined in database.
@@ -209,7 +212,7 @@ View another user's post and interact with their question.
 
 
 ## Page Route
-/ 
+/create_post
 
 
 **Mockup for View All Posts**
@@ -217,17 +220,22 @@ View another user's post and interact with their question.
 
 
 ## Route Parameters:
-
+Log in is manadatory
 
 ## Query Parameters:
-
+* Files and comments from database.
+* User hash keys for the comments
 
 ## Link Destinations for Page
-
+Back to dashboard
 
 ## Data Required to Render Page
-
+* Files and comments from database.
+* User hash keys for the comments
 
 ## Tests for Verifying Rendering of the Page
+* verify the file shows correctly.
+* Verify the username hashes.
+* Verify comments are correct.
 
 
