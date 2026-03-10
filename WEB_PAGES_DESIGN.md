@@ -105,7 +105,6 @@ This page allows users to create an AnonReview account. It also allows users to 
 None
 
 ## Query Parameters:
-
 None
 
 ## Link Destinations for Page
@@ -141,39 +140,46 @@ None
 Dashboard
 
 ## Page Description
+Home page when logged in. Options to view post, interact with post, or add post.
 
 ## Page Route
 
 **Dashboard** → `/dashboard`
 
 **Mockup for Dashboard**
-
+![DashBoard](Dashboard.png)
 
 ## Route Parameters:
-
+Login → Dashboard
+Logging in is required to access the dashboard.
 
 ## Query Parameters:
-
-
+None
 ## Link Destinations for Page
-
+/dashboard
 
 ## Data Required to Render Page
+* Comments
+* Files
+* User created posts
 
 
 ## Tests for Verifying Rendering of the Page
+* Render pages and posts in the database.
+* Render comments in the database.
 
 
 # 4) Create Post Page
 
-## Page Title 
+## Page Title
+
 
 
 ## Page Description
-
+Shows all posts that have been made by users, and include the ability to add posts.
 
 ## Page Route
-
+/dashboard
 
 **Mockup for Create Post**
 
