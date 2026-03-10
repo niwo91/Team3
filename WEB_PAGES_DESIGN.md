@@ -173,31 +173,31 @@ None
 
 ## Page Title
 
-
+Create Post
 
 ## Page Description
-Shows all posts that have been made by users, and include the ability to add posts.
+Allows user to post with a title, a description, file upload, and a category. 
 
 ## Page Route
-/dashboard
+/create_post
 
 **Mockup for Create Post**
 
 
 ## Route Parameters:
-
+Logged in is manadtory
 
 ## Query Parameters:
-
+None.
 
 ## Link Destinations for Page
-
+/create_post
 
 ## Data Required to Render Page
-
+Catagories defined in database.
 
 ## Tests for Verifying Rendering of the Page
-
+Mandate input for title and description. 
 
 # 5) View Single Posts Page
 
