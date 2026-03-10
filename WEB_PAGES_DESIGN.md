@@ -155,6 +155,7 @@ Logging in is required to access the dashboard.
 
 ## Query Parameters:
 None
+
 ## Link Destinations for Page
 /dashboard
 
@@ -172,7 +173,6 @@ None
 # 4) Create Post Page
 
 ## Page Title
-
 Create Post
 
 ## Page Description
@@ -186,18 +186,21 @@ Allows user to post with a title, a description, file upload, and a category.
 ![View_A_post](View_A_Post.png)
 
 ## Route Parameters:
-Logged in is manadtory
+Logged in is manadtory.
 
 ## Query Parameters:
-None.
+* Query the correct files and posts
+* Query catagories.
+* Query comments. 
 
 ## Link Destinations for Page
 * Back to dashboard
 * Submit post
 
-
 ## Data Required to Render Page
-Catagories defined in database.
+* Catagories defined in database.
+* Comments and files associted with the post in the database. 
+
 
 ## Tests for Verifying Rendering of the Page
 Mandate input for title and description. 
@@ -205,7 +208,7 @@ Mandate input for title and description.
 # 5) View Single Posts Page
 
 ## Page Title 
-User defined by an input field (varies)
+Varries - User defined by an input field.
 
 ## Page Description
 View another user's post and interact with their question. 
