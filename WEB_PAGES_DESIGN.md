@@ -193,7 +193,7 @@ Dashboard
 ## Tests for Verifying Rendering of the Page
 
 
-# 5) View All Posts Page
+# 5) View Single Posts Page
 
 ## Page Title 
 
