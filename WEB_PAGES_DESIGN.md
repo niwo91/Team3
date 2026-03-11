@@ -42,14 +42,16 @@ URL query parameter `?redirect=/path` if user tries to access protected pages ou
 ## Link Destinations for Page
 
 **Submit success** → `/dashboard` (redirect)
+
 **Register** → `/register`
+
 **Submit failure** → `/login` (show Login page with error message)
 
 ## Data Required to Render Page
 
 1. UI state: username, password, validation errors
-2. API: To be added
-3. Auth State Storage: To be added
+2. API data: "GET /login HTTP/", "POST /login HTTP/"
+3. Auth State Storage: storage using Flask Login, sessions stored in cookies (planned)
 
 ## Tests for Verifying Rendering of the Page
 
@@ -115,8 +117,7 @@ None
 ## Data Required to Render Page
 
 1. UI state: username, password, email, role, validation errors
-2. API: To be added
-3. Auth State Storage: To be added
+2. API data: "GET /register HTTP/", "POST /register HTTP/"
 
 ## Tests for Verifying Rendering of the Page
 
