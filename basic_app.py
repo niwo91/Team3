@@ -154,15 +154,15 @@ def upload_file():
 
     if not allowed_file(file.filename):
         return jsonify({'error': f'File type not allowed. Allowed types: {ALLOWED_EXTENSIONS}'}), 400
-    
+
     filename = secure_filename(file.filename)
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    
 
-    ##  warning: THIS NEEDS TO CHANGE WHEN DATA BASE 
-    
-    #  Save metadata to DB
+    # SAVE FILE TO DISK (this was missing)
+    file.save(filepath)
+
     db = get_db()
+
     db.execute("""
         INSERT INTO posts
         (user_id, title, body, attachment_path, attachment_type)
@@ -171,12 +171,11 @@ def upload_file():
         1,                    # temporary user id
         filename,
         "Uploaded file",
-        filepath,
-        file.filename.split('.')[-1]
+        filename,             # store filename NOT full path
+        filename.split('.')[-1]
     ))
 
     db.commit()
-    
 
     return f'''
         <!doctype html>
@@ -195,12 +194,9 @@ def upload_file():
             </div>
         </body>
         </html>
-        '''
-
+    '''
 @app.route('/files/<int:post_id>')
 def get_file(post_id):
-
-    
 
     row = query_db(
         "SELECT attachment_path FROM posts WHERE post_id = ?",
@@ -217,9 +213,7 @@ def get_file(post_id):
     if os.path.exists(filepath):
         return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-    return "File missing on disk", 404
-
-    
+    return "File missing on disk", 404  
 
 @app.route('/files')
 def list_files():
@@ -237,12 +231,16 @@ def list_files():
     <ul>
     '''
 
-    # DB mode
-    
-    rows = query_db("SELECT post_id, title FROM posts")
-    for row in rows:
-        html += f'<li><a href="{url_for("view_post", post_id=row["post_id"])}">{row["title"]}</a></li>'
+    rows = query_db("SELECT attachment_path FROM posts")
 
+    for row in rows:
+        filename = row["attachment_path"]
+
+        # skip broken rows
+        if not filename:
+            continue
+
+        html += f'<li><a href="{url_for("view_file", filename=filename)}">{filename}</a></li>'
 
     html += f'''
     </ul>
@@ -256,7 +254,6 @@ def list_files():
     '''
 
     return html
-
 @app.route('/view/<filename>')
 def view_file(filename):
 
@@ -266,24 +263,25 @@ def view_file(filename):
     if not os.path.exists(filepath):
         return "File not found", 404
 
-    # Get comments
-    post_comments = query_db('SELECT body FROM comments WHERE post_id = (SELECT post_id FROM posts WHERE attachment_path = ?)', (filename,))
+    post_comments = query_db(
+        'SELECT body FROM comments WHERE post_id = (SELECT post_id FROM posts WHERE attachment_path = ?)',
+        (safe_name,)
+    )
 
-    # If text file → display content
+    # text file display
     if safe_name.endswith(('.txt', '.py')):
         with open(filepath, 'r', encoding='utf-8') as f:
             content = f.readlines()
 
         return render_template(
-        "view_file.html",
-        filename=safe_name,
-        lines=content,
-        comments=post_comments
-    )
+            "view_file.html",
+            filename=safe_name,
+            lines=content,
+            comments=post_comments
+        )
 
-    # If image or pdf render directly
+    # image/pdf direct render
     return send_from_directory(app.config['UPLOAD_FOLDER'], safe_name)
-
 @app.route('/categories', methods=['POST', 'GET'])
 def categories():
     data = query_db('SELECT * FROM categories')
