@@ -160,25 +160,23 @@ def upload_file():
     
 
     ##  warning: THIS NEEDS TO CHANGE WHEN DATA BASE 
-    if FUNCTIONAL_DATABASE_PUSHED == 1:
-        #  Save metadata to DB
-        db = get_db()
-        db.execute("""
-            INSERT INTO posts
-            (user_id, title, body, attachment_path, attachment_type)
-            VALUES (?, ?, ?, ?, ?)
-        """, (
-            1,                    # temporary user id
-            filename,
-            "Uploaded file",
-            filepath,
-            file.filename.split('.')[-1]
-        ))
+    
+    #  Save metadata to DB
+    db = get_db()
+    db.execute("""
+        INSERT INTO posts
+        (user_id, title, body, attachment_path, attachment_type)
+        VALUES (?, ?, ?, ?, ?)
+    """, (
+        1,                    # temporary user id
+        filename,
+        "Uploaded file",
+        filepath,
+        file.filename.split('.')[-1]
+    ))
 
-        db.commit()
-    else:
-        print("File saved to server, but database interactions not implemented yet.")
-        file.save(filepath)
+    db.commit()
+    
 
     return f'''
         <!doctype html>
@@ -202,35 +200,24 @@ def upload_file():
 @app.route('/files/<int:post_id>')
 def get_file(post_id):
 
-    if FUNCTIONAL_DATABASE_PUSHED == 1:
+    
 
-        row = query_db(
-            "SELECT attachment_path FROM posts WHERE post_id = ?",
-            (post_id,),
-            one=True
-        )
+    row = query_db(
+        "SELECT attachment_path FROM posts WHERE post_id = ?",
+        (post_id,),
+        one=True
+    )
 
-        if not row:
-            return "File not found in database", 404
+    if not row:
+        return "File not found in database", 404
 
-        filename = row["attachment_path"]
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    filename = row["attachment_path"]
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
-        if os.path.exists(filepath):
-            return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    if os.path.exists(filepath):
+        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-        return "File missing on disk", 404
-
-
-    else:
-
-        files = sorted(os.listdir(app.config['UPLOAD_FOLDER']))
-
-        if 0 <= post_id - 1 < len(files):
-            filename = files[post_id - 1]
-            return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-
-        return "File not found", 404
+    return "File missing on disk", 404
 
     
 
@@ -251,17 +238,11 @@ def list_files():
     '''
 
     # DB mode
-    if FUNCTIONAL_DATABASE_PUSHED == 1:
-        rows = query_db("SELECT post_id, title FROM posts")
-        for row in rows:
-            html += f'<li><a href="{url_for("view_post", post_id=row["post_id"])}">{row["title"]}</a></li>'
+    
+    rows = query_db("SELECT post_id, title FROM posts")
+    for row in rows:
+        html += f'<li><a href="{url_for("view_post", post_id=row["post_id"])}">{row["title"]}</a></li>'
 
-    # Dev mode
-    else:
-        files = sorted(os.listdir(app.config['UPLOAD_FOLDER']))
-
-        for index, filename in enumerate(files, start=1):
-            html += f'<li><a href="{url_for("view_file", filename=filename)}">{filename}</a></li>'
 
     html += f'''
     </ul>
