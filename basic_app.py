@@ -282,6 +282,47 @@ def view_file(filename):
 
     # image/pdf direct render
     return send_from_directory(app.config['UPLOAD_FOLDER'], safe_name)
+
+@app.route('/delete_post/<int:post_id>', methods=['POST'])
+def delete_post(post_id):
+
+    db = get_db()
+
+    # get file name from DB
+    row = query_db(
+        "SELECT attachment_path FROM posts WHERE post_id = ?",
+        (post_id,),
+        one=True
+    )
+
+    if not row:
+        return "Post not found", 404
+
+    filename = row["attachment_path"]
+
+    # delete file from disk
+    if filename:
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+        if os.path.exists(filepath):
+            os.remove(filepath)
+
+    # delete comments related to the post
+    db.execute(
+        "DELETE FROM comments WHERE post_id = ?",
+        (post_id,)
+    )
+
+    # delete the post itself
+    db.execute(
+        "DELETE FROM posts WHERE post_id = ?",
+        (post_id,)
+    )
+
+    db.commit()
+
+    return redirect(url_for('dashboard'))
+
 @app.route('/categories', methods=['POST', 'GET'])
 def categories():
     data = query_db('SELECT * FROM categories')
