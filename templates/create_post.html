@@ -1,15 +1,25 @@
-<h1>Create Post</h1>
+<!doctype html>                                                                                                                      
+<html>                                                                                                                               
+	<head>
+        	<title>Create Post</title>
+        	<link rel="stylesheet" href="{url_for('static', filename='style.css')}">
+	</head>  
 
-<form method="POST">
-    <input type="text" name="title" placeholder="Title" required><br><br>
+	<body>
+		<div class="container"> 
+			<h1> Create a Post </h1>
+			<form method=POST enctype=multipart/form-data>
+    				<input type="text" name="title" placeholder="Title" required><br><br>
+    				<textarea name="body" placeholder="Write your post..." required></textarea><br><br>
+				<input type="file" name="file" /><br><br>
+    				<select name="category_id">
+        				{% for c in categories %}
+            				<option value="{{ c.category_id }}">{{ c.name }}</option>
+        			{% endfor %}
+    				</select><br><br>
+				<button type="submit">Create Post</button>
+			</form>
+		</div>
+	</body>
 
-    <textarea name="body" placeholder="Write your post..." required></textarea><br><br>
-
-    <select name="category_id">
-        {% for c in categories %}
-            <option value="{{ c.category_id }}">{{ c.name }}</option>
-        {% endfor %}
-    </select><br><br>
-
-    <button type="submit">Create Post</button>
-</form>
+</html>

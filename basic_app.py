@@ -67,7 +67,6 @@ def query_db(query, args=(), one=False):
     cur.close()
     return (rv[0] if rv else None) if one else rv
 
-
 @app.route('/')
 def index():
     '''
@@ -113,8 +112,12 @@ def register():
            
     return render_template("register.html", form=form, already_exists = False)
 
+############
+## I think we can get rid of the routes below until we get to the next comment block like this
+############
 @app.route('/upload')
 def upload():
+    ## May be replaced with /create_post route
     return f'''
     <!doctype html>
     <html>
@@ -141,6 +144,7 @@ def upload():
 
 @app.route('/upload_file', methods=['POST'])
 def upload_file():
+    ## We can get rid of this one too
     '''
     Handle file upload and save it to the server.
     '''
@@ -195,6 +199,7 @@ def upload_file():
         </body>
         </html>
     '''
+
 @app.route('/files/<int:post_id>')
 def get_file(post_id):
 
@@ -254,6 +259,7 @@ def list_files():
     '''
 
     return html
+
 @app.route('/view/<filename>')
 def view_file(filename):
 
@@ -282,33 +288,51 @@ def view_file(filename):
 
     # image/pdf direct render
     return send_from_directory(app.config['UPLOAD_FOLDER'], safe_name)
-@app.route('/categories', methods=['POST', 'GET'])
-def categories():
-    data = query_db('SELECT * FROM categories')
-    return render_template("categories.html", data=data)
+
+################
+## I think we can delete the routes above
+################
 
 @app.route('/create_post', methods=['GET', 'POST'])
 def create_post():
     if request.method == 'POST':
-        user_id = session.get('user_id')
+        ## Uncomment below when we have user_id sessions working
+        #user_id = session.get('user_id')
         title = request.form['title']
         body = request.form['body']
         category_id = request.form.get('category_id')
+        attachment_path = request.files['file']
+        attachment_type = None
+        filename = None
+        
+
+        # Check file validity
+        # Attachment not required
+        if attachment_path.filename != None and attachment_path.filename != '':
+            if not allowed_file(attachment_path.filename):
+                return jsonify({'error': f'File type not allowed. Allowed types: {ALLOWED_EXTENSIONS}'}), 400
+            else:
+                filename = secure_filename(attachment_path.filename)
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                attachment_path.save(filepath)
+                attachment_type = filename.split('.')[-1]
 
         db = get_db()
 
         # Insert post without anon_name first
         cursor = db.execute(
             """
-            INSERT INTO posts (user_id, category_id, title, body)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO posts (user_id, category_id, title, body, attachment_path, attachment_type)
+            VALUES (?, ?, ?, ?, ?, ?)
             """,
-            (user_id, category_id, title, body)
+            # Replace 1 with user_id when we have user id sessions working
+            (1, category_id, title, body, filename, attachment_type)
         )
         post_id = cursor.lastrowid
 
         # Generate pseudonym
-        pseudonym = anon_name(user_id, post_id)
+        ## Update 1 with user id when user sessions are working
+        pseudonym = anon_name(1, post_id)
 
         # Update post with anon_name
         db.execute(
@@ -330,13 +354,22 @@ def view_post(post_id):
         (post_id,),
         one=True
     )
-
     comments = query_db(
         "SELECT * FROM comments WHERE post_id = ? ORDER BY created_at ASC",
         (post_id,)
     )
+    filename = post[5]
+        
+    # No functionality for pdf or images yet
+    if filename is not None:
+        safe_name = secure_filename(filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], safe_name)
+        if safe_name.endswith(('.txt', '.py')):
+            with open(filepath, 'r', encoding='utf-8') as f:
+                content = f.readlines()
+            return render_template("view_post.html", post=post, comments=comments, lines=content) 
 
-    return render_template("view_post.html", post=post, comments=comments)
+    return render_template("view_post.html", post=post, comments=comments, lines=None)
 
 @app.route('/dashboard')
 def dashboard():
@@ -360,7 +393,8 @@ def submit_form():
 
 @app.route('/add_comment/<int:post_id>', methods=['POST'])
 def add_comment(post_id):
-    user_id = session.get('user_id')
+    #Update User_id when we have sessions
+    user_id = 1 # Update to session.get('user_id')
     body = request.form['body']
 
     db = get_db()
@@ -372,7 +406,7 @@ def add_comment(post_id):
         INSERT INTO comments (post_id, user_id, body, anon_name)
         VALUES (?, ?, ?, ?)
         """,
-        (post_id, user_id, body, pseudonym)
+        (post_id, 1, body, pseudonym)# Update USer id when we have sessions
     )
     db.commit()
 

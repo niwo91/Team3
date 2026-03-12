@@ -1,8 +1,39 @@
-<h1>{{ post.title }}</h1>
+<!doctype html>
+<html>
+<head>
+    <title>{{ post.title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>{{ post.title }}</h2>
 <p><strong>{{ post.anon_name }}</strong> wrote:</p>
 <p>{{ post.body }}</p>
 
-<hr>
+{% if lines %}
+<table class="code-view">
+
+{% for line in lines %}
+
+<tr>
+
+<td class="line-number">
+{{ loop.index }}
+</td>
+
+<td class="code-line">
+<pre>{{ line }}</pre>
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+{% endif %}
 
 <h2>Comments</h2>
 {% for c in comments %}
@@ -13,3 +44,9 @@
     <textarea name="body" placeholder="Add a comment..." required></textarea><br>
     <button type="submit">Comment</button>
 </form>
+<br>
+
+</div>
+
+</body>
+</html>
