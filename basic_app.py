@@ -29,7 +29,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB max
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=60) #user session times out after an hour
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=60) #user session times out after an hour if no requests made
 app.config['SESSION_REFRESH_EACH_REQUEST'] = True #timer is reset by requests
 
 def allowed_file(filename):
@@ -149,12 +149,18 @@ def register():
            
     return render_template("register.html", form=form, already_exists = False)
 
-#user logout- still needs to be set up as a link. do this once automatic session timeout has been set
+#user logout
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for("/"))
+    return redirect(url_for("index"))
+
+
+#sends user to index page if session times out
+@login_manager.unauthorized_handler
+def unauthorized():
+    return redirect("/")
 
 
 ############
