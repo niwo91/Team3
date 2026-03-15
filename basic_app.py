@@ -5,7 +5,8 @@ import sqlite3
 from dotenv import load_dotenv
 
 from flask import Flask, request, jsonify, render_template, g, send_from_directory, url_for, redirect, session
-from flask_login import LoginManager, UserMixin, login_user, current_user, logout_user
+from flask_login import LoginManager, UserMixin, login_user, current_user, logout_user, login_required
+from datetime import timedelta
 from forms import LoginForm, RegistrationForm
 from werkzeug.utils import secure_filename
 from Constants import *
@@ -28,7 +29,8 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB max
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
-
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=60) #user session times out after an hour
+app.config['SESSION_REFRESH_EACH_REQUEST'] = True #timer is reset by requests
 
 def allowed_file(filename):
     '''
@@ -68,9 +70,7 @@ def query_db(query, args=(), one=False):
     cur.close()
     return (rv[0] if rv else None) if one else rv
 
-#adding login and authentication related methods, classes here
-
-#allows app and the extension to work together
+#connects the app and the Flask-Login extension
 login_manager = LoginManager()
 login_manager.init_app(app)
 
@@ -83,7 +83,7 @@ class User(UserMixin):
         self.role = role
 
     
-
+#login manager reloads user ID stored in session
 @login_manager.user_loader
 def load_user(user_id):
     user_row = query_db('SELECT * FROM users WHERE user_id = ?', [user_id], one=True)
@@ -98,13 +98,11 @@ def index():
     '''
     return render_template("index.html")
 
-#route for login page, renders login.html by matching form to LoginForm
+#route for login page
 @app.route('/login', methods=['POST', 'GET'])
 def login():
 
     form = LoginForm()
-
-    print(current_user)
 
     #if user is already logged in redirect them to their dashboard
     if current_user.is_authenticated:
@@ -118,14 +116,14 @@ def login():
             return render_template('login.html', form=form, invalid_login=True)
 
         else:
-            user_obj = User(user[0], user[1], user[4])
+            user_obj = User(user[0], user[1], user[4]) #create User object
             login_user(user_obj)
-            print(current_user)
+            session.permanent = True #session is permanent so that config can handle timeouts
             return redirect("/dashboard")
 
     return render_template('login.html', form=form, invalid_login=False)
 
-#route for registration page, renders registration.html by matching form to RegistrationForm
+#route for registration page
 @app.route('/register', methods=['POST', 'GET'])
 def register():
     form = RegistrationForm()
@@ -153,10 +151,10 @@ def register():
 
 #user logout- still needs to be set up as a link. do this once automatic session timeout has been set
 @app.route('/logout')
+@login_required
 def logout():
     logout_user()
     return redirect(url_for("/"))
-
 
 
 ############
@@ -340,6 +338,7 @@ def view_file(filename):
 ## I think we can delete the routes above
 ################
 @app.route('/delete_post/<int:post_id>', methods=['POST'])
+@login_required
 def delete_post(post_id):
 
     db = get_db()
@@ -380,6 +379,7 @@ def delete_post(post_id):
     return redirect(url_for('dashboard'))
 
 @app.route('/create_post', methods=['GET', 'POST'])
+@login_required
 def create_post():
     if request.method == 'POST':
         ## Uncomment below when we have user_id sessions working
@@ -434,6 +434,7 @@ def create_post():
 
 
 @app.route('/post/<int:post_id>')
+@login_required
 def view_post(post_id):
     post = query_db(
         "SELECT * FROM posts WHERE post_id = ?",
@@ -458,6 +459,7 @@ def view_post(post_id):
     return render_template("view_post.html", post=post, comments=comments, lines=None)
 
 @app.route('/dashboard')
+@login_required
 def dashboard():
     posts = query_db(
         "SELECT * FROM posts ORDER BY created_at DESC LIMIT 20"
@@ -465,6 +467,7 @@ def dashboard():
     return render_template("dashboard.html", posts=posts)
 
 @app.route('/submit_form', methods=["POST"])
+@login_required
 def submit_form():
     comment = request.form.get("comment")
     filename = request.form.get("filename")
@@ -478,6 +481,7 @@ def submit_form():
     return view_file(filename)
 
 @app.route('/add_comment/<int:post_id>', methods=['POST'])
+@login_required
 def add_comment(post_id):
     #Update User_id when we have sessions
     user_id = 1 # Update to session.get('user_id')
