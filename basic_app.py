@@ -5,6 +5,7 @@ import sqlite3
 from dotenv import load_dotenv
 
 from flask import Flask, request, jsonify, render_template, g, send_from_directory, url_for, redirect, session
+from flask_login import LoginManager, UserMixin, login_user, current_user, logout_user
 from forms import LoginForm, RegistrationForm
 from werkzeug.utils import secure_filename
 from Constants import *
@@ -67,6 +68,29 @@ def query_db(query, args=(), one=False):
     cur.close()
     return (rv[0] if rv else None) if one else rv
 
+#adding login and authentication related methods, classes here
+
+#allows app and the extension to work together
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+#User class, object can be made with data from database. Inherits required methods from UserMixin
+class User(UserMixin):
+    def __init__(self, id, name, role):
+        
+        self.id = id
+        self.name = name
+        self.role = role
+
+    
+
+@login_manager.user_loader
+def load_user(user_id):
+    user_row = query_db('SELECT * FROM users WHERE user_id = ?', [user_id], one=True)
+    user = User(user_row[0], user_row[1], user_row[4])
+    return user
+
+
 @app.route('/')
 def index():
     '''
@@ -77,7 +101,15 @@ def index():
 #route for login page, renders login.html by matching form to LoginForm
 @app.route('/login', methods=['POST', 'GET'])
 def login():
+
     form = LoginForm()
+
+    print(current_user)
+
+    #if user is already logged in redirect them to their dashboard
+    if current_user.is_authenticated:
+        return redirect("/dashboard")
+
     #handles form validation, makes sure request is POST
     if form.validate_on_submit():
         user = query_db('SELECT * FROM users WHERE username = ? AND password_hash = ?', [form.user_name.data, form.password.data], one=True)
@@ -86,6 +118,9 @@ def login():
             return render_template('login.html', form=form, invalid_login=True)
 
         else:
+            user_obj = User(user[0], user[1], user[4])
+            login_user(user_obj)
+            print(current_user)
             return redirect("/dashboard")
 
     return render_template('login.html', form=form, invalid_login=False)
@@ -95,6 +130,10 @@ def login():
 def register():
     form = RegistrationForm()
     db = get_db()
+
+    #if user is already logged in redirect them to dashboard
+    if current_user.is_authenticated:
+        return redirect("/dashboard")
 
     if form.validate_on_submit():
 
@@ -111,6 +150,14 @@ def register():
             return render_template("register.html", form=form, already_exists = True)
            
     return render_template("register.html", form=form, already_exists = False)
+
+#user logout- still needs to be set up as a link. do this once automatic session timeout has been set
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for("/"))
+
+
 
 ############
 ## I think we can get rid of the routes below until we get to the next comment block like this
