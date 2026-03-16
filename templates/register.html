@@ -26,9 +26,13 @@
 
     <a href="{{ url_for('login') }}">Already have an account? Log in!</a>
 
-    {% if already_exists %}
+    {% if username_already_exists %}
 
-    <p>Account with this username or email already exists.</p>
+    <p>Account with this username already exists.</p>
+
+    {% elif email_already_exists %}
+
+    <p>Account with this email already exists.</p>
 
     {% endif %}
     

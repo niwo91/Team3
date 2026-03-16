@@ -87,6 +87,10 @@ class User(UserMixin):
 @login_manager.user_loader
 def load_user(user_id):
     user_row = query_db('SELECT * FROM users WHERE user_id = ?', [user_id], one=True)
+
+    if user_row == None:
+        return None
+    
     user = User(user_row[0], user_row[1], user_row[4])
     return user
 
@@ -135,17 +139,25 @@ def register():
 
     if form.validate_on_submit():
 
-        existing_user = query_db('SELECT * FROM users WHERE username = ? OR email = ?', [form.user_name.data, form.email.data], one=True)
+        #check if username and email exist in database
+        existing_username = query_db('SELECT * FROM users WHERE username = ?', [form.user_name.data], one=True)
+        existing_email = query_db('SELECT * FROM users WHERE email = ?', [form.email.data], one=True)
 
-        if existing_user == None:
+        #if neither exist, register the user and redirect to login
+        if existing_username == None and existing_email == None:
             query_db('INSERT INTO users (username, email, password_hash, role) ' \
             'VALUES (?, ?, ?, ?)', [form.user_name.data, form.email.data, form.password.data, form.role.data])
             db.commit()
             
             return redirect("/login")
         
-        else:
-            return render_template("register.html", form=form, already_exists = True)
+        #if username exists, inform user and do not register
+        elif existing_username != None:
+            return render_template("register.html", form=form, username_already_exists = True)
+        
+        #if email exists inform user and do not register
+        elif existing_email != None:
+            return render_template("register.html", form=form, email_already_exists = True)
            
     return render_template("register.html", form=form, already_exists = False)
 
