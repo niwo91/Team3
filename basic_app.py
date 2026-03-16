@@ -4,7 +4,7 @@ import os
 import sqlite3
 from dotenv import load_dotenv
 
-from flask import Flask, request, jsonify, render_template, g, send_from_directory, url_for, redirect, session
+from flask import Flask, request, jsonify, render_template, g, send_from_directory, url_for, redirect, session, flash
 from flask_login import LoginManager, UserMixin, login_user, current_user, logout_user, login_required
 from datetime import timedelta
 from forms import LoginForm, RegistrationForm
@@ -127,6 +127,7 @@ def login():
 
     return render_template('login.html', form=form, invalid_login=False)
 
+
 #route for registration page
 @app.route('/register', methods=['POST', 'GET'])
 def register():
@@ -149,6 +150,7 @@ def register():
             'VALUES (?, ?, ?, ?)', [form.user_name.data, form.email.data, form.password.data, form.role.data])
             db.commit()
             
+            flash("Registration successful! Please log in.") #inform user that registration was successful
             return redirect("/login")
         
         #if username exists, inform user and do not register
