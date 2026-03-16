@@ -402,8 +402,7 @@ def delete_post(post_id):
 @login_required
 def create_post():
     if request.method == 'POST':
-        ## Uncomment below when we have user_id sessions working
-        #user_id = session.get('user_id')
+        user_id = current_user.id
         title = request.form['title']
         body = request.form['body']
         category_id = request.form.get('category_id')
@@ -432,7 +431,7 @@ def create_post():
             VALUES (?, ?, ?, ?, ?, ?)
             """,
             # Replace 1 with user_id when we have user id sessions working
-            (1, category_id, title, body, filename, attachment_type)
+            (user_id, category_id, title, body, filename, attachment_type)
         )
         post_id = cursor.lastrowid
 
@@ -486,25 +485,10 @@ def dashboard():
     )
     return render_template("dashboard.html", posts=posts)
 
-@app.route('/submit_form', methods=["POST"])
-@login_required
-def submit_form():
-    comment = request.form.get("comment")
-    filename = request.form.get("filename")
-    ## Will need to be updated to allow for user ids, etc with database
-    db = get_db()
-    query_db(
-            'INSERT INTO comments (post_id, user_id, body, comment_anchor, created_at) VALUES (?, ?, ?, ?, ?)', 
-            [2, 1, comment, 'a', '1/1/2001'], 
-            one=True)
-    db.commit()
-    return view_file(filename)
-
 @app.route('/add_comment/<int:post_id>', methods=['POST'])
 @login_required
 def add_comment(post_id):
-    #Update User_id when we have sessions
-    user_id = 1 # Update to session.get('user_id')
+    user_id = current_user.id 
     body = request.form['body']
 
     db = get_db()
@@ -516,7 +500,7 @@ def add_comment(post_id):
         INSERT INTO comments (post_id, user_id, body, anon_name)
         VALUES (?, ?, ?, ?)
         """,
-        (post_id, 1, body, pseudonym)# Update USer id when we have sessions
+        (post_id, user_id, body, pseudonym)# Update USer id when we have sessions
     )
     db.commit()
 
