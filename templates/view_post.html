@@ -15,23 +15,12 @@
 
 {% if lines %}
 <table class="code-view">
-
 {% for line in lines %}
-
 <tr>
-
-<td class="line-number">
-{{ loop.index }}
-</td>
-
-<td class="code-line">
-<pre>{{ line }}</pre>
-</td>
-
+    <td class="line-number">{{ loop.index }}</td>
+    <td class="code-line"><pre>{{ line }}</pre></td>
 </tr>
-
 {% endfor %}
-
 </table>
 {% endif %}
 
@@ -40,12 +29,24 @@
     <p><strong>{{ c.anon_name }}</strong>: {{ c.body }}</p>
 {% endfor %}
 
+<!-- COMMENT FORM -->
 <form method="POST" action="{{ url_for('add_comment', post_id=post.post_id) }}">
     <textarea name="body" placeholder="Add a comment..." required></textarea><br>
     <button type="submit">Comment</button>
 </form>
+
+<!-- DELETE BUTTON (moved below comment box) -->
+{% if session.get('user_id') == post.user_id or session.get('role') in ['admin', 'moderator'] %}
+<form action="{{ url_for('delete_post', post_id=post.post_id) }}" method="POST">
+    <button class="delete-button" type="submit">
+        Delete Post
+    </button>
+</form>
+{% endif %}
+
 <br>
 <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+
 </div>
 
 </body>
