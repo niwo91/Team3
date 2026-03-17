@@ -478,6 +478,7 @@ def view_post(post_id):
     return render_template("view_post.html", post=post, comments=comments, lines=None)
 
 @app.route('/dashboard')
+@login_required
 def dashboard():
     category_id = request.args.get('category')
 
