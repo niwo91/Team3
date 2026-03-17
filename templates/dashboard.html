@@ -12,11 +12,26 @@
         <div class="top-bar">
             <a class="back-button" href="{{ url_for('index') }}">← Home</a>
             <a class="create-button" href="{{ url_for('create_post') }}">+ New Post</a>
-            <a class="logout-button" href="{{ url_for('logout') }}"> Log Out</a>
+            <a class="logout-button" href="{{ url_for('logout') }}">Log Out</a>
         </div>
 
         <h1>All Posts</h1>
         <p class="subtitle small-subtitle">Latest activity from the community</p>
+
+        <!-- Category Filter Buttons -->
+        <div class="category-buttons">
+            <a href="{{ url_for('dashboard') }}"
+               class="cat-btn {% if not selected_category %}active{% endif %}">
+                All
+            </a>
+
+            {% for cat in categories %}
+                <a href="{{ url_for('dashboard') }}?category={{ cat.category_id }}"
+                   class="cat-btn {% if selected_category == cat.category_id|string %}active{% endif %}">
+                    {{ cat.name }}
+                </a>
+            {% endfor %}
+        </div>
 
         <!-- Expanded post feed -->
         <div class="post-feed">
@@ -37,6 +52,7 @@
                     <a class="read-more small-text" href="{{ url_for('view_post', post_id=p.post_id) }}">
                         Read full post →
                     </a>
+
                     <!-- DELETE BUTTON -->
                     <form action="{{ url_for('delete_post', post_id=p.post_id) }}" method="POST">
                         <button class="delete-button" type="submit">

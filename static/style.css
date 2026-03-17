@@ -128,4 +128,22 @@ td, th {
     font-size: 12px;
     user-select: none;
 }
+.category-buttons {
+    display: flex;
+    gap: 10px;
+    margin: 15px 0 25px 0;
+}
 
+.cat-btn {
+    padding: 6px 12px;
+    background: #374151;
+    color: #f9fafb;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.cat-btn.active {
+    background: #2563eb;
+}

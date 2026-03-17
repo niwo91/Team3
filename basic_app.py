@@ -478,12 +478,27 @@ def view_post(post_id):
     return render_template("view_post.html", post=post, comments=comments, lines=None)
 
 @app.route('/dashboard')
-@login_required
 def dashboard():
-    posts = query_db(
-        "SELECT * FROM posts ORDER BY created_at DESC LIMIT 20"
+    category_id = request.args.get('category')
+
+    if category_id:
+        posts = query_db(
+            "SELECT * FROM posts WHERE category_id = ? ORDER BY created_at DESC",
+            (category_id,)
+        )
+    else:
+        posts = query_db(
+            "SELECT * FROM posts ORDER BY created_at DESC"
+        )
+
+    categories = query_db("SELECT * FROM categories")
+
+    return render_template(
+        "dashboard.html",
+        posts=posts,
+        categories=categories,
+        selected_category=category_id
     )
-    return render_template("dashboard.html", posts=posts)
 
 @app.route('/add_comment/<int:post_id>', methods=['POST'])
 @login_required
