@@ -122,6 +122,8 @@ def login():
         else:
             user_obj = User(user[0], user[1], user[4]) #create User object
             login_user(user_obj)
+            session["user_id"] = user[0]
+            session["role"] = user[4] 
             session.permanent = True #session is permanent so that config can handle timeouts
             return redirect("/dashboard")
 
@@ -365,13 +367,22 @@ def delete_post(post_id):
 
     # get file name from DB
     row = query_db(
-        "SELECT attachment_path FROM posts WHERE post_id = ?",
+        "SELECT post_id, user_id, attachment_path FROM posts WHERE post_id = ?",
         (post_id,),
         one=True
     )
 
     if not row:
         return "Post not found", 404
+
+    # Permission check
+    is_owner = (user['user_id'] == row['user_id'])
+    is_admin = (user['role'] == 'admin')
+    is_mod = (user['role'] == 'moderator')
+
+    if not (is_owner or is_admin or is_mod):
+        return "Forbidden", 403
+
 
     filename = row["attachment_path"]
 
