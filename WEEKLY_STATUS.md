@@ -116,3 +116,41 @@ the file grows large.
 ### Notes
 This file will be updated weekly as the project progresses. Earlier weekly entries may be retained below or moved to an archive directory if
 the file grows large.
+----
+### Reporting Period
+**Week:** 4
+**Meeting Held:** 
+**Meeting Date:** March 16th, 2026
+**Meeting Duration: 40 minutes** 
+**Meeting Format:** Zoom
+
+### Progress Since Last Week/Completed Tasks
+- Created user sessions for login. Implemented restricted views based off the login session. Session timeout (60mins).Combined upload file route, view post route with the create post route and view file route. Created the delete post functionality, connected file names to database. Created the filter buttons, moved delete post to post view page and added deletion permissions.
+---
+### Planned Tasks for Next Week
+- Nandini - Add a hashing function for the password. Will add new users with new passwords.
+- Nick - Files to blobs and storing them in SQLite as blobs. Update User table with active/inactive bool. Delete extra code.
+- Faisal - Create inline comments and upvote and downvote functionality.
+- Adeline - Fix the new post page. Make a user profile page for updates.
+---
+### Blockers and Issues
+* Lack of posts.
+* Database planning.
+---
+### Risks and Mitigation
+**Identified Risk:Anyone could delete posts**
+- Mitigation: User priviliges. 
+**Identified Risk:Overwriting files with current implementation**
+- Mitigation: Storing files as blobs.
+**Identified Risk:Lots of people working on DB file at the same time**
+- Mitigation: Communication
+---
+### Team Reflection
+* We've made a lot of progress with the app.
+---
+### Individual Contributions This Week
+- Nandini: Created user sessions for login. Implemented restricted views based off the login session. Session timeout (60mins).
+- Nick: Combined upload file route, view post route with the create post route and view file route.
+- Faisal: Created the delete post functionality, connected file names to database
+- Adeline: Created the filter buttons, moved delete post to post view page and added deletion permissions.
+---
