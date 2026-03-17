@@ -17,25 +17,76 @@
 <table class="code-view">
 {% for line in lines %}
 <tr>
+    <!-- LINE NUMBER -->
     <td class="line-number">{{ loop.index }}</td>
-    <td class="code-line"><pre>{{ line }}</pre></td>
+
+    <!-- CODE -->
+    <td class="code-line">
+        <pre>{{ line }}</pre>
+    </td>
+
+    <!-- 🔥 INLINE COMMENTS COLUMN -->
+    <td class="inline-comments">
+
+        <!-- ADD COMMENT (for this line) -->
+        <form method="POST" action="{{ url_for('add_comment', post_id=post.post_id) }}">
+            <input type="hidden" name="line_number" value="{{ loop.index }}">
+            <input name="body" placeholder="Comment..." required>
+            <button type="submit">+</button>
+        </form>
+
+        <!-- SHOW COMMENTS FOR THIS LINE -->
+        {% if loop.index in comments_by_line %}
+            {% for c in comments_by_line[loop.index] %}
+                <div class="comment-box">
+                    <strong>{{ c.anon_name }}</strong>: {{ c.body }}
+
+                    <div>
+                        👍 {{ c.upvotes }} | 👎 {{ c.downvotes }}
+                    </div>
+
+                    <!-- VOTE -->
+                    <form method="POST" action="{{ url_for('vote_comment', comment_id=c.comment_id) }}">
+                        <button name="vote" value="up">▲</button>
+                        <button name="vote" value="down">▼</button>
+                    </form>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+    </td>
 </tr>
 {% endfor %}
 </table>
 {% endif %}
 
+<hr>
+
+<!-- 🔥 GENERAL COMMENTS -->
 <h2>Comments</h2>
-{% for c in comments %}
-    <p><strong>{{ c.anon_name }}</strong>: {{ c.body }}</p>
+
+{% for c in general_comments %}
+    <div class="comment-box">
+        <strong>{{ c.anon_name }}</strong>: {{ c.body }}
+
+        <div>
+            👍 {{ c.upvotes }} | 👎 {{ c.downvotes }}
+        </div>
+
+        <form method="POST" action="{{ url_for('vote_comment', comment_id=c.comment_id) }}">
+            <button name="vote" value="up">▲</button>
+            <button name="vote" value="down">▼</button>
+        </form>
+    </div>
 {% endfor %}
 
-<!-- COMMENT FORM -->
+<!-- GENERAL COMMENT FORM -->
 <form method="POST" action="{{ url_for('add_comment', post_id=post.post_id) }}">
-    <textarea name="body" placeholder="Add a comment..." required></textarea><br>
+    <textarea name="body" placeholder="Add a general comment..." required></textarea><br>
     <button type="submit">Comment</button>
 </form>
 
-<!-- DELETE BUTTON (moved below comment box) -->
+<!-- DELETE BUTTON -->
 {% if session.get('user_id') == post.user_id or session.get('role') in ['admin', 'moderator'] %}
 <form action="{{ url_for('delete_post', post_id=post.post_id) }}" method="POST">
     <button class="delete-button" type="submit">

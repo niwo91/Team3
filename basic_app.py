@@ -485,7 +485,7 @@ def view_post(post_id):
         (post_id,)
     )
 
-    # 🔥 group comments
+    # 🔥 Group comments
     comments_by_line = {}
     general_comments = []
 
@@ -497,9 +497,9 @@ def view_post(post_id):
         else:
             general_comments.append(c)
 
-    filename = post["attachment_path"]   # ✅ FIXED
+    filename = post["attachment_path"]
 
-    # Handle file rendering
+    # Handle file display
     if filename:
         safe_name = secure_filename(filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], safe_name)

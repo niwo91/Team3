@@ -46,7 +46,18 @@ CREATE TABLE comments (
     anon_name      TEXT,
     body           TEXT NOT NULL,
     comment_anchor TEXT,
+    line_number    INTEGER,
+    upvotes        INTEGER DEFAULT 0,
+    downvotes      INTEGER DEFAULT 0,
     created_at     TEXT DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (post_id) REFERENCES posts(post_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+CREATE TABLE comment_votes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    comment_id INTEGER,
+    vote_type TEXT,
+    UNIQUE(user_id, comment_id)
 );
