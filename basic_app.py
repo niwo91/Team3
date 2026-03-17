@@ -471,22 +471,89 @@ def view_post(post_id):
         (post_id,),
         one=True
     )
+
+    if not post:
+        return "Post not found", 404
+
     comments = query_db(
-        "SELECT * FROM comments WHERE post_id = ? ORDER BY created_at ASC",
+        """
+        SELECT comment_id, body, anon_name, line_number, upvotes, downvotes
+        FROM comments
+        WHERE post_id = ?
+        ORDER BY created_at ASC
+        """,
         (post_id,)
     )
-    filename = post[5]
-        
-    # No functionality for pdf or images yet
-    if filename is not None:
+
+    # 🔥 group comments
+    comments_by_line = {}
+    general_comments = []
+
+    for c in comments:
+        line = c["line_number"]
+
+        if line is not None:
+            comments_by_line.setdefault(line, []).append(c)
+        else:
+            general_comments.append(c)
+
+    filename = post["attachment_path"]   # ✅ FIXED
+
+    # Handle file rendering
+    if filename:
         safe_name = secure_filename(filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], safe_name)
-        if safe_name.endswith(('.txt', '.py')):
+
+        if os.path.exists(filepath) and safe_name.endswith(('.txt', '.py')):
             with open(filepath, 'r', encoding='utf-8') as f:
                 content = f.readlines()
-            return render_template("view_post.html", post=post, comments=comments, lines=content) 
 
-    return render_template("view_post.html", post=post, comments=comments, lines=None)
+            return render_template(
+                "view_post.html",
+                post=post,
+                lines=content,
+                comments_by_line=comments_by_line,
+                general_comments=general_comments
+            )
+
+    return render_template(
+        "view_post.html",
+        post=post,
+        lines=None,
+        comments_by_line={},
+        general_comments=general_comments
+    )
+
+@app.route('/comment/<int:comment_id>/vote', methods=['POST'])
+@login_required
+def vote_comment(comment_id):
+    vote_type = request.form.get("vote")  # "up" or "down"
+    user_id = current_user.id
+
+    db = get_db()
+
+    existing = query_db(
+        "SELECT * FROM comment_votes WHERE user_id = ? AND comment_id = ?",
+        (user_id, comment_id),
+        one=True
+    )
+
+    if existing:
+        return redirect(request.referrer)
+
+    db.execute(
+        "INSERT INTO comment_votes (user_id, comment_id, vote_type) VALUES (?, ?, ?)",
+        (user_id, comment_id, vote_type)
+    )
+
+    if vote_type == "up":
+        db.execute("UPDATE comments SET upvotes = upvotes + 1 WHERE comment_id = ?", (comment_id,))
+    else:
+        db.execute("UPDATE comments SET downvotes = downvotes + 1 WHERE comment_id = ?", (comment_id,))
+
+    db.commit()
+
+    return redirect(request.referrer)
 
 @app.route('/dashboard')
 @login_required
@@ -517,18 +584,28 @@ def dashboard():
 def add_comment(post_id):
     user_id = current_user.id 
     body = request.form['body']
+    line_number = request.form.get('line_number')  # Optional, for text file comments
 
     db = get_db()
 
     pseudonym = anon_name(user_id, post_id)
-
-    db.execute(
-        """
-        INSERT INTO comments (post_id, user_id, body, anon_name)
-        VALUES (?, ?, ?, ?)
-        """,
-        (post_id, user_id, body, pseudonym)# Update USer id when we have sessions
-    )
+    if line_number:
+        line_number = int(line_number)
+        db.execute(
+            """
+            INSERT INTO comments (post_id, user_id, body, anon_name, line_number)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (post_id, user_id, body, pseudonym, line_number) # Update USer id when we have sessions
+        )
+    else:
+        db.execute(
+            """
+            INSERT INTO comments (post_id, user_id, body, anon_name)
+            VALUES (?, ?, ?, ?)
+            """,
+            (post_id, user_id, body, pseudonym)# Update USer id when we have sessions
+        )
     db.commit()
 
     return redirect(url_for('view_post', post_id=post_id))
