@@ -2,24 +2,35 @@
 <html>                                                                                                                               
 	<head>
         	<title>Create Post</title>
-        	<link rel="stylesheet" href="{url_for('static', filename='style.css')}">
+        	<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 	</head>  
 
 	<body>
 		<div class="container"> 
 			<h1> Create a Post </h1>
-			<form method=POST enctype=multipart/form-data>
+
+			<form method="POST" enctype="multipart/form-data">
+
+    				<!-- TITLE -->
     				<input type="text" name="title" placeholder="Title" required><br><br>
+
+    				<!-- BODY -->
     				<textarea name="body" placeholder="Write your post..." required></textarea><br><br>
+
+				<!-- FILE -->
 				<input type="file" name="file" /><br><br>
-    				<select name="category_id">
+
+    				<!-- CATEGORY (FIXED) -->
+    				<select name="category_id" required>
+        				<option value="">-- Select Category --</option>
         				{% for c in categories %}
             				<option value="{{ c.category_id }}">{{ c.name }}</option>
-        			{% endfor %}
+        				{% endfor %}
     				</select><br><br>
+
 				<button type="submit">Create Post</button>
+
 			</form>
 		</div>
 	</body>
-
 </html>

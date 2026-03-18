@@ -3,6 +3,7 @@
 import os
 import sqlite3
 from dotenv import load_dotenv
+import time
 
 from flask import Flask, request, jsonify, render_template, g, send_from_directory, url_for, redirect, session, flash
 from flask_login import LoginManager, UserMixin, login_user, current_user, logout_user, login_required
@@ -56,6 +57,19 @@ def close_connection(exception):
     db = getattr(g, '_database', None)
     if db is not None:
         db.close()
+
+def init_categories():
+    db = get_db()
+
+    db.execute("INSERT INTO categories (name) VALUES (?)", ("Homework",))
+    db.execute("INSERT INTO categories (name) VALUES (?)", ("Project",))
+    db.execute("INSERT INTO categories (name) VALUES (?)", ("Exam Prep",))
+    db.execute("INSERT INTO categories (name) VALUES (?)", ("General",))
+    db.execute("INSERT INTO categories (name) VALUES (?)", ("Code Review",))
+
+    db.commit()
+
+    return "Categories initialized!" 
 
 def query_db(query, args=(), one=False):
     '''
@@ -230,6 +244,10 @@ def upload_file():
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
     # SAVE FILE TO DISK (this was missing)
+    if filename in os.listdir(app.config['UPLOAD_FOLDER']):
+        filename = f"{filename.rsplit('.', 1)[0]}_{int(time.time())}.{filename.rsplit('.', 1)[1]}"
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
     file.save(filepath)
 
     db = get_db()
@@ -376,6 +394,9 @@ def delete_post(post_id):
         return "Post not found", 404
 
     # Permission check
+    user = {
+        'user_id': current_user.id,
+        'role': current_user.role    }
     is_owner = (user['user_id'] == row['user_id'])
     is_admin = (user['role'] == 'admin')
     is_mod = (user['role'] == 'moderator')
@@ -412,6 +433,10 @@ def delete_post(post_id):
 @app.route('/create_post', methods=['GET', 'POST'])
 @login_required
 def create_post():
+    categories = query_db("SELECT * FROM categories")
+    if not categories:
+        init_categories()
+        
     if request.method == 'POST':
         user_id = current_user.id
         title = request.form['title']
@@ -429,6 +454,8 @@ def create_post():
                 return jsonify({'error': f'File type not allowed. Allowed types: {ALLOWED_EXTENSIONS}'}), 400
             else:
                 filename = secure_filename(attachment_path.filename)
+                if filename in os.listdir(app.config['UPLOAD_FOLDER']):
+                    filename = f"{filename.rsplit('.', 1)[0]}_{int(time.time())}.{filename.rsplit('.', 1)[1]}"
                 filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 attachment_path.save(filepath)
                 attachment_type = filename.split('.')[-1]
@@ -456,6 +483,8 @@ def create_post():
             (pseudonym, post_id)
         )
         db.commit()
+
+        
 
         return redirect(url_for('view_post', post_id=post_id))
 
@@ -485,7 +514,7 @@ def view_post(post_id):
         (post_id,)
     )
 
-    # 🔥 Group comments
+    # Group comments
     comments_by_line = {}
     general_comments = []
 
@@ -609,7 +638,8 @@ def add_comment(post_id):
     db.commit()
 
     return redirect(url_for('view_post', post_id=post_id))
-    
+
+
 if __name__ == '__main__':
     print("Starting AnonReview upload server local host")
     app.run(debug=True)
