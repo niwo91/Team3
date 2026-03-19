@@ -1,25 +1,51 @@
-<!doctype html>                                                                                                                      
-<html>                                                                                                                               
-	<head>
-        	<title>Create Post</title>
-        	<link rel="stylesheet" href="{url_for('static', filename='style.css')}">
-	</head>  
+<!doctype html>
+<html lang="en-US">
+<head>
+    <meta charset="utf-8" />
+    <title>Create Post – AnonReview</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
 
-	<body>
-		<div class="container"> 
-			<h1> Create a Post </h1>
-			<form method=POST enctype=multipart/form-data>
-    				<input type="text" name="title" placeholder="Title" required><br><br>
-    				<textarea name="body" placeholder="Write your post..." required></textarea><br><br>
-				<input type="file" name="file" /><br><br>
-    				<select name="category_id">
-        				{% for c in categories %}
-            				<option value="{{ c.category_id }}">{{ c.name }}</option>
-        			{% endfor %}
-    				</select><br><br>
-				<button type="submit">Create Post</button>
-			</form>
-		</div>
-	</body>
+<body>
+    <div class="container">
 
+        <!-- Top navigation row -->
+        <div class="top-bar">
+            <a class="back-button" href="{{ url_for('dashboard') }}">← Back</a>
+            <a class="logout-button" href="{{ url_for('logout') }}">Log Out</a>
+        </div>
+
+        <h1>Create a New Post</h1>
+        <p class="subtitle small-subtitle">Share your thoughts and attach a file if needed</p>
+
+        <form method="POST" enctype="multipart/form-data">
+
+            <div class="form-field">
+                <input type="text" name="title" placeholder="Post Title" required>
+            </div>
+
+            <div class="form-field">
+                <textarea name="body" placeholder="Write your post..." required></textarea>
+            </div>
+
+            <div class="form-field">
+                <input type="file" name="file">
+            </div>
+
+            <div class="form-field">
+                <select name="category_id">
+                    {% for c in categories %}
+                        <option value="{{ c.category_id }}">{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-field">
+                <button type="submit">Create Post</button>
+            </div>
+
+        </form>
+
+    </div>
+</body>
 </html>
