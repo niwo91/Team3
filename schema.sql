@@ -12,6 +12,7 @@ CREATE TABLE users (
     password_hash TEXT NOT NULL,
     role          TEXT CHECK(role IN ('student', 'teacher', 'admin', 'moderator'))
                   DEFAULT 'student',
+    is_active     INTEGER CHECK(is_active IN (0, 1)) DEFAULT 1, --1 is active
     created_at    TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -30,6 +31,7 @@ CREATE TABLE posts (
     title TEXT NOT NULL,
     body TEXT NOT NULL,
     attachment_path TEXT,
+    attachment_blob BLOB,
     attachment_type TEXT,
     anon_name TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
@@ -46,7 +48,20 @@ CREATE TABLE comments (
     anon_name      TEXT,
     body           TEXT NOT NULL,
     comment_anchor TEXT,
+    line_number    INTEGER,
+    upvotes        INTEGER DEFAULT 0,
+    downvotes      INTEGER DEFAULT 0,
     created_at     TEXT DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (post_id) REFERENCES posts(post_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+CREATE TABLE comment_votes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    comment_id INTEGER,
+    vote_type TEXT,
+    UNIQUE(user_id, comment_id),
+    FOREIGN KEY (comment_id) REFERENCES comments(comment_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
