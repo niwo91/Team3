@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 
 from flask import Flask, request, jsonify, render_template, g, send_from_directory, url_for, redirect, session, flash
 from flask_login import LoginManager, UserMixin, login_user, current_user, logout_user, login_required
+from passlib.hash import bcrypt
 from datetime import timedelta
 from forms import LoginForm, RegistrationForm
 from werkzeug.utils import secure_filename
@@ -114,16 +115,18 @@ def login():
 
     #handles form validation, makes sure request is POST
     if form.validate_on_submit():
-        user = query_db('SELECT * FROM users WHERE username = ? AND password_hash = ?', [form.user_name.data, form.password.data], one=True)
+        user_row = query_db('SELECT * FROM users WHERE username = ?', [form.user_name.data], one=True)
+        hash = user_row[3]
+        pswd_verify = bcrypt.verify(form.password.data, hash) #check whether given password matches hash
 
-        if user == None:
+        if user_row == None or pswd_verify == False:
             return render_template('login.html', form=form, invalid_login=True)
 
         else:
-            user_obj = User(user[0], user[1], user[4]) #create User object
+            user_obj = User(user_row[0], user_row[1], user_row[4]) #create User object
             login_user(user_obj)
-            session["user_id"] = user[0]
-            session["role"] = user[4] 
+            session["user_id"] = user_row[0]
+            session["role"] = user_row[4] 
             session.permanent = True #session is permanent so that config can handle timeouts
             return redirect("/dashboard")
 
@@ -148,8 +151,9 @@ def register():
 
         #if neither exist, register the user and redirect to login
         if existing_username == None and existing_email == None:
+            hash_pswd = bcrypt.hash(form.password.data) #hash the given password to store in database
             query_db('INSERT INTO users (username, email, password_hash, role) ' \
-            'VALUES (?, ?, ?, ?)', [form.user_name.data, form.email.data, form.password.data, form.role.data])
+            'VALUES (?, ?, ?, ?)', [form.user_name.data, form.email.data, hash_pswd, form.role.data])
             db.commit()
             
             flash("Registration successful! Please log in.") #inform user that registration was successful
@@ -374,11 +378,12 @@ def delete_post(post_id):
 
     if not row:
         return "Post not found", 404
+    
 
     # Permission check
-    is_owner = (user['user_id'] == row['user_id'])
-    is_admin = (user['role'] == 'admin')
-    is_mod = (user['role'] == 'moderator')
+    is_owner = (session['user_id'] == row['user_id'])
+    is_admin = (session['role'] == 'admin')
+    is_mod = (session['role'] == 'moderator')
 
     if not (is_owner or is_admin or is_mod):
         return "Forbidden", 403
