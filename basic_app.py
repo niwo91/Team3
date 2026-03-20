@@ -7,7 +7,7 @@ import time
 
 from flask import Flask, request, jsonify, render_template, g, send_from_directory, url_for, redirect, session, flash
 from flask_login import LoginManager, UserMixin, login_user, current_user, logout_user, login_required
-from passlib.hash import bcrypt
+from passlib.hash import pbkdf2_sha512
 from datetime import timedelta
 from forms import LoginForm, RegistrationForm
 from werkzeug.utils import secure_filename
@@ -91,11 +91,12 @@ login_manager.init_app(app)
 
 #User class, object can be made with data from database. Inherits required methods from UserMixin
 class User(UserMixin):
-    def __init__(self, id, name, role):
+    def __init__(self, id, name, role, active):
         
         self.id = id
         self.name = name
         self.role = role
+        self.active = active
 
     
 #login manager reloads user ID stored in session
@@ -106,7 +107,7 @@ def load_user(user_id):
     if user_row == None:
         return None
     
-    user = User(user_row[0], user_row[1], user_row[4])
+    user = User(user_row[0], user_row[1], user_row[4], user_row[5])
     return user
 
 
@@ -130,14 +131,22 @@ def login():
     #handles form validation, makes sure request is POST
     if form.validate_on_submit():
         user_row = query_db('SELECT * FROM users WHERE username = ?', [form.user_name.data], one=True)
-        hash = user_row[3]
-        pswd_verify = bcrypt.verify(form.password.data, hash) #check whether given password matches hash
 
-        if user_row == None or pswd_verify == False:
+        if user_row == None:
             return render_template('login.html', form=form, invalid_login=True)
+        
+        hash = user_row[3]
+        active = user_row[5]
+        pswd_verify = pbkdf2_sha512.verify(form.password.data, hash) #check whether given password matches hash
+        
+        if pswd_verify == False:
+            return render_template('login.html', form=form, invalid_login=True)
+        
+        elif active == False:
+            return render_template('login.html', form=form, not_active=True)
 
         else:
-            user_obj = User(user_row[0], user_row[1], user_row[4]) #create User object
+            user_obj = User(user_row[0], user_row[1], user_row[4], user_row[5]) #create User object
             login_user(user_obj)
             session["user_id"] = user_row[0]
             session["role"] = user_row[4] 
@@ -165,7 +174,7 @@ def register():
 
         #if neither exist, register the user and redirect to login
         if existing_username == None and existing_email == None:
-            hash_pswd = bcrypt.hash(form.password.data) #hash the given password to store in database
+            hash_pswd = pbkdf2_sha512.hash(form.password.data) #hash the given password to store in database
             query_db('INSERT INTO users (username, email, password_hash, role) ' \
             'VALUES (?, ?, ?, ?)', [form.user_name.data, form.email.data, hash_pswd, form.role.data])
             db.commit()
@@ -399,9 +408,6 @@ def delete_post(post_id):
     
 
     # Permission check
-    is_owner = (session['user_id'] == row['user_id'])
-    is_admin = (session['role'] == 'admin')
-    is_mod = (session['role'] == 'moderator')
     user = {
         'user_id': current_user.id,
         'role': current_user.role    }

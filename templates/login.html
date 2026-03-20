@@ -31,6 +31,12 @@
 
     {% endif %}
 
+    {% if not_active == True %}
+
+    <p>Your account has been banned or suspended. Please contact admin for more details.</p>
+
+    {% endif %}
+
     {% with messages = get_flashed_messages() %}
 
     {% if messages %}
