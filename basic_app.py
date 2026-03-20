@@ -247,7 +247,7 @@ def delete_post(post_id):
 
     # get file name from DB
     row = query_db(
-        "SELECT post_id, user_id, attachment_path FROM posts WHERE post_id = ?",
+        "SELECT post_id, user_id FROM posts WHERE post_id = ?",
         (post_id,),
         one=True
     )
@@ -266,16 +266,6 @@ def delete_post(post_id):
 
     if not (is_owner or is_admin or is_mod):
         return "Forbidden", 403
-
-
-    filename = row["attachment_path"]
-
-    # delete file from disk
-    if filename:
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-
-        if os.path.exists(filepath):
-            os.remove(filepath)
 
     # delete comments related to the post
     db.execute(
@@ -342,8 +332,6 @@ def create_post():
             (pseudonym, post_id)
         )
         db.commit()
-
-        
 
         return redirect(url_for('view_post', post_id=post_id))
 
