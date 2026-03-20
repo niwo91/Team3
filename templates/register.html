@@ -18,6 +18,7 @@
 
             <div>{{ form.user_name.label }}: {{ form.user_name() }}</div> <br>
             <div>{{ form.password.label }}: {{form.password() }}</div> <br>
+            <div>{{ form.password_check.label }}: {{form.password_check() }}</div> <br>
             <div>{{ form.email.label }}: {{ form.email() }}</div> <br>
             <div>{{ form.role.label }}: {{form.role() }}</div> <br>
             <div>{{ form.submit() }}</div> <br>
@@ -25,6 +26,12 @@
     </form>
 
     <a href="{{ url_for('login') }}">Already have an account? Log in!</a>
+
+     {% if different_passwords %}
+
+    <p>Passwords do not match.</p>
+
+    {% endif %}
 
     {% if username_already_exists %}
 

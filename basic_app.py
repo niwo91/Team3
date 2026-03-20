@@ -174,6 +174,10 @@ def register():
 
         #if neither exist, register the user and redirect to login
         if existing_username == None and existing_email == None:
+
+            if form.password.data != form.password_check.data:
+                return render_template("register.html", form=form, different_passwords = True)
+            
             hash_pswd = pbkdf2_sha512.hash(form.password.data) #hash the given password to store in database
             query_db('INSERT INTO users (username, email, password_hash, role) ' \
             'VALUES (?, ?, ?, ?)', [form.user_name.data, form.email.data, hash_pswd, form.role.data])
