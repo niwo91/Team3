@@ -30,7 +30,7 @@ CREATE TABLE posts (
     category_id INTEGER,
     title TEXT NOT NULL,
     body TEXT NOT NULL,
-    attachment_path TEXT,
+    attachment_name TEXT,
     attachment_blob BLOB,
     attachment_type TEXT,
     anon_name TEXT,

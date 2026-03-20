@@ -85,6 +85,36 @@ def query_db(query, args=(), one=False):
     cur.close()
     return (rv[0] if rv else None) if one else rv
 
+def blobify(file):
+    """
+    @param file to turn into a binary blob
+    @return binary blob of file
+    """
+    data = 0
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], 'temp_file')
+    file.save(filepath)
+    with open(filepath, 'rb') as file:
+        data = file.read()
+    os.remove(filepath)
+    return data
+
+
+def unblobify(binary):
+    """
+    @param binary of file
+    @return file for display
+    """
+    # Only works with .txt and .py for now
+    file = ""
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], 'temp_file')
+    with open(filepath, "wb") as f:
+        f.write(binary)
+    with open(filepath, 'r', encoding='utf-8') as f:
+        file = f.readlines()
+    os.remove(filepath)
+    return file
+    
+
 #connects the app and the Flask-Login extension
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -209,191 +239,6 @@ def logout():
 def unauthorized():
     return redirect("/")
 
-
-############
-## I think we can get rid of the routes below until we get to the next comment block like this
-############
-@app.route('/upload')
-def upload():
-    ## May be replaced with /create_post route
-    return f'''
-    <!doctype html>
-    <html>
-    <head>
-        <title>Upload File</title>
-        <link rel="stylesheet" href="{url_for('static', filename='style.css')}">
-    </head>
-    <body>
-        <div class="container">
-            <h1>AnonReview File Upload</h1>
-
-            <form method="POST" action="{url_for('upload_file')}" enctype="multipart/form-data">
-                <input type="file" name="file" />
-                <br><br>
-                <input type="submit" value="Upload" />
-            </form>
-
-            <br>
-            <a href="{url_for('index')}">Back to Home</a>
-        </div>
-    </body>
-    </html>
-    '''
-
-@app.route('/upload_file', methods=['POST'])
-def upload_file():
-    ## We can get rid of this one too
-    '''
-    Handle file upload and save it to the server.
-    '''
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part in request'}), 400
-
-    file = request.files['file']
-
-    if file.filename == '' or file.filename is None:
-        return jsonify({'error': 'No file selected'}), 400
-
-    if not allowed_file(file.filename):
-        return jsonify({'error': f'File type not allowed. Allowed types: {ALLOWED_EXTENSIONS}'}), 400
-
-    filename = secure_filename(file.filename)
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-
-    # SAVE FILE TO DISK (this was missing)
-    if filename in os.listdir(app.config['UPLOAD_FOLDER']):
-        filename = f"{filename.rsplit('.', 1)[0]}_{int(time.time())}.{filename.rsplit('.', 1)[1]}"
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-
-    file.save(filepath)
-
-    db = get_db()
-
-    db.execute("""
-        INSERT INTO posts
-        (user_id, title, body, attachment_path, attachment_type)
-        VALUES (?, ?, ?, ?, ?)
-    """, (
-        1,                    # temporary user id
-        filename,
-        "Uploaded file",
-        filename,             # store filename NOT full path
-        filename.split('.')[-1]
-    ))
-
-    db.commit()
-
-    return f'''
-        <!doctype html>
-        <html>
-        <head>
-            <title>Upload Success</title>
-            <link rel="stylesheet" href="{url_for('static', filename='style.css')}">
-        </head>
-        <body>
-            <div class="container">
-                <h2>File Uploaded Successfully!</h2>
-                <p>Filename: {filename}</p>
-                <a href="{url_for('list_files')}">View Uploaded Files</a>
-                <br><br>
-                <a href="{url_for('upload')}">Upload Another File</a>
-            </div>
-        </body>
-        </html>
-    '''
-
-@app.route('/files/<int:post_id>')
-def get_file(post_id):
-
-    row = query_db(
-        "SELECT attachment_path FROM posts WHERE post_id = ?",
-        (post_id,),
-        one=True
-    )
-
-    if not row:
-        return "File not found in database", 404
-
-    filename = row["attachment_path"]
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-
-    if os.path.exists(filepath):
-        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-
-    return "File missing on disk", 404  
-
-@app.route('/files')
-def list_files():
-
-    html = f'''
-    <!doctype html>
-    <html>
-    <head>
-        <title>Uploaded Files</title>
-        <link rel="stylesheet" href="{url_for('static', filename='style.css')}">
-    </head>
-    <body>
-    <div class="container">
-    <h1>Uploaded Files</h1>
-    <ul>
-    '''
-
-    rows = query_db("SELECT attachment_path FROM posts")
-
-    for row in rows:
-        filename = row["attachment_path"]
-
-        # skip broken rows
-        if not filename:
-            continue
-
-        html += f'<li><a href="{url_for("view_file", filename=filename)}">{filename}</a></li>'
-
-    html += f'''
-    </ul>
-    <br>
-    <a href="{url_for('upload')}">Upload Another File</a>
-    <br><br>
-    <a href="{url_for('index')}">Back to Home</a>
-    </div>
-    </body>
-    </html>
-    '''
-
-    return html
-
-@app.route('/view/<filename>')
-def view_file(filename):
-
-    safe_name = secure_filename(filename)
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], safe_name)
-
-    if not os.path.exists(filepath):
-        return "File not found", 404
-
-    post_comments = query_db(
-        'SELECT body FROM comments WHERE post_id = (SELECT post_id FROM posts WHERE attachment_path = ?)',
-        (safe_name,)
-    )
-
-    # text file display
-    if safe_name.endswith(('.txt', '.py')):
-        with open(filepath, 'r', encoding='utf-8') as f:
-            content = f.readlines()
-
-        return render_template(
-            "view_file.html",
-            filename=safe_name,
-            lines=content,
-            comments=post_comments
-        )
-
-    # image/pdf direct render
-    return send_from_directory(app.config['UPLOAD_FOLDER'], safe_name)
-
-################
-## I think we can delete the routes above
-################
 @app.route('/delete_post/<int:post_id>', methods=['POST'])
 @login_required
 def delete_post(post_id):
@@ -460,22 +305,19 @@ def create_post():
         title = request.form['title']
         body = request.form['body']
         category_id = request.form.get('category_id')
-        attachment_path = request.files['file']
+        attachment = request.files['file']
         attachment_type = None
         filename = None
-        
+        attachment_blob = None
 
         # Check file validity
         # Attachment not required
-        if attachment_path.filename != None and attachment_path.filename != '':
-            if not allowed_file(attachment_path.filename):
+        if attachment.filename != None and attachment.filename != '':
+            if not allowed_file(attachment.filename):
                 return jsonify({'error': f'File type not allowed. Allowed types: {ALLOWED_EXTENSIONS}'}), 400
             else:
-                filename = secure_filename(attachment_path.filename)
-                if filename in os.listdir(app.config['UPLOAD_FOLDER']):
-                    filename = f"{filename.rsplit('.', 1)[0]}_{int(time.time())}.{filename.rsplit('.', 1)[1]}"
-                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                attachment_path.save(filepath)
+                filename = secure_filename(attachment.filename)
+                attachment_blob = blobify(attachment)
                 attachment_type = filename.split('.')[-1]
 
         db = get_db()
@@ -483,11 +325,10 @@ def create_post():
         # Insert post without anon_name first
         cursor = db.execute(
             """
-            INSERT INTO posts (user_id, category_id, title, body, attachment_path, attachment_type)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO posts (user_id, category_id, title, body, attachment_name, attachment_blob, attachment_type)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
-            # Replace 1 with user_id when we have user id sessions working
-            (user_id, category_id, title, body, filename, attachment_type)
+            (user_id, category_id, title, body, filename, attachment_blob, attachment_type)
         )
         post_id = cursor.lastrowid
 
@@ -544,24 +385,19 @@ def view_post(post_id):
         else:
             general_comments.append(c)
 
-    filename = post["attachment_path"]
+    filename = post["attachment_name"]
 
     # Handle file display
     if filename:
-        safe_name = secure_filename(filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], safe_name)
+        content = unblobify(post["attachment_blob"])
 
-        if os.path.exists(filepath) and safe_name.endswith(('.txt', '.py')):
-            with open(filepath, 'r', encoding='utf-8') as f:
-                content = f.readlines()
-
-            return render_template(
-                "view_post.html",
-                post=post,
-                lines=content,
-                comments_by_line=comments_by_line,
-                general_comments=general_comments
-            )
+        return render_template(
+            "view_post.html",
+            post=post,
+            lines=content,
+            comments_by_line=comments_by_line,
+            general_comments=general_comments
+        )
 
     return render_template(
         "view_post.html",
