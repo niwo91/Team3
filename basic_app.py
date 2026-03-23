@@ -3,6 +3,7 @@
 import os
 import sqlite3
 from dotenv import load_dotenv
+import time
 
 from flask import Flask, request, jsonify, render_template, g, send_from_directory, url_for, redirect, session, flash
 from flask_login import LoginManager, UserMixin, login_user, current_user, logout_user, login_required
@@ -56,6 +57,19 @@ def close_connection(exception):
     db = getattr(g, '_database', None)
     if db is not None:
         db.close()
+
+def init_categories():
+    db = get_db()
+
+    db.execute("INSERT INTO categories (name) VALUES (?)", ("Homework",))
+    db.execute("INSERT INTO categories (name) VALUES (?)", ("Project",))
+    db.execute("INSERT INTO categories (name) VALUES (?)", ("Exam Prep",))
+    db.execute("INSERT INTO categories (name) VALUES (?)", ("General",))
+    db.execute("INSERT INTO categories (name) VALUES (?)", ("Code Review",))
+
+    db.commit()
+
+    return "Categories initialized!" 
 
 def query_db(query, args=(), one=False):
     '''
@@ -230,6 +244,10 @@ def upload_file():
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
     # SAVE FILE TO DISK (this was missing)
+    if filename in os.listdir(app.config['UPLOAD_FOLDER']):
+        filename = f"{filename.rsplit('.', 1)[0]}_{int(time.time())}.{filename.rsplit('.', 1)[1]}"
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
     file.save(filepath)
 
     db = get_db()
@@ -376,6 +394,9 @@ def delete_post(post_id):
         return "Post not found", 404
 
     # Permission check
+    user = {
+        'user_id': current_user.id,
+        'role': current_user.role    }
     is_owner = (user['user_id'] == row['user_id'])
     is_admin = (user['role'] == 'admin')
     is_mod = (user['role'] == 'moderator')
@@ -412,6 +433,10 @@ def delete_post(post_id):
 @app.route('/create_post', methods=['GET', 'POST'])
 @login_required
 def create_post():
+    categories = query_db("SELECT * FROM categories")
+    if not categories:
+        init_categories()
+        
     if request.method == 'POST':
         user_id = current_user.id
         title = request.form['title']
@@ -429,6 +454,8 @@ def create_post():
                 return jsonify({'error': f'File type not allowed. Allowed types: {ALLOWED_EXTENSIONS}'}), 400
             else:
                 filename = secure_filename(attachment_path.filename)
+                if filename in os.listdir(app.config['UPLOAD_FOLDER']):
+                    filename = f"{filename.rsplit('.', 1)[0]}_{int(time.time())}.{filename.rsplit('.', 1)[1]}"
                 filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 attachment_path.save(filepath)
                 attachment_type = filename.split('.')[-1]
@@ -457,6 +484,8 @@ def create_post():
         )
         db.commit()
 
+        
+
         return redirect(url_for('view_post', post_id=post_id))
 
     categories = query_db("SELECT * FROM categories")
@@ -471,24 +500,92 @@ def view_post(post_id):
         (post_id,),
         one=True
     )
+
+    if not post:
+        return "Post not found", 404
+
     comments = query_db(
-        "SELECT * FROM comments WHERE post_id = ? ORDER BY created_at ASC",
+        """
+        SELECT comment_id, body, anon_name, line_number, upvotes, downvotes
+        FROM comments
+        WHERE post_id = ?
+        ORDER BY created_at ASC
+        """,
         (post_id,)
     )
-    filename = post[5]
-        
-    # No functionality for pdf or images yet
-    if filename is not None:
+
+    # Group comments
+    comments_by_line = {}
+    general_comments = []
+
+    for c in comments:
+        line = c["line_number"]
+
+        if line is not None:
+            comments_by_line.setdefault(line, []).append(c)
+        else:
+            general_comments.append(c)
+
+    filename = post["attachment_path"]
+
+    # Handle file display
+    if filename:
         safe_name = secure_filename(filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], safe_name)
-        if safe_name.endswith(('.txt', '.py')):
+
+        if os.path.exists(filepath) and safe_name.endswith(('.txt', '.py')):
             with open(filepath, 'r', encoding='utf-8') as f:
                 content = f.readlines()
-            return render_template("view_post.html", post=post, comments=comments, lines=content) 
 
-    return render_template("view_post.html", post=post, comments=comments, lines=None)
+            return render_template(
+                "view_post.html",
+                post=post,
+                lines=content,
+                comments_by_line=comments_by_line,
+                general_comments=general_comments
+            )
+
+    return render_template(
+        "view_post.html",
+        post=post,
+        lines=None,
+        comments_by_line={},
+        general_comments=general_comments
+    )
+
+@app.route('/comment/<int:comment_id>/vote', methods=['POST'])
+@login_required
+def vote_comment(comment_id):
+    vote_type = request.form.get("vote")  # "up" or "down"
+    user_id = current_user.id
+
+    db = get_db()
+
+    existing = query_db(
+        "SELECT * FROM comment_votes WHERE user_id = ? AND comment_id = ?",
+        (user_id, comment_id),
+        one=True
+    )
+
+    if existing:
+        return redirect(request.referrer)
+
+    db.execute(
+        "INSERT INTO comment_votes (user_id, comment_id, vote_type) VALUES (?, ?, ?)",
+        (user_id, comment_id, vote_type)
+    )
+
+    if vote_type == "up":
+        db.execute("UPDATE comments SET upvotes = upvotes + 1 WHERE comment_id = ?", (comment_id,))
+    else:
+        db.execute("UPDATE comments SET downvotes = downvotes + 1 WHERE comment_id = ?", (comment_id,))
+
+    db.commit()
+
+    return redirect(request.referrer)
 
 @app.route('/dashboard')
+@login_required
 def dashboard():
     category_id = request.args.get('category')
 
@@ -516,22 +613,33 @@ def dashboard():
 def add_comment(post_id):
     user_id = current_user.id 
     body = request.form['body']
+    line_number = request.form.get('line_number')  # Optional, for text file comments
 
     db = get_db()
 
     pseudonym = anon_name(user_id, post_id)
-
-    db.execute(
-        """
-        INSERT INTO comments (post_id, user_id, body, anon_name)
-        VALUES (?, ?, ?, ?)
-        """,
-        (post_id, user_id, body, pseudonym)# Update USer id when we have sessions
-    )
+    if line_number:
+        line_number = int(line_number)
+        db.execute(
+            """
+            INSERT INTO comments (post_id, user_id, body, anon_name, line_number)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (post_id, user_id, body, pseudonym, line_number) # Update USer id when we have sessions
+        )
+    else:
+        db.execute(
+            """
+            INSERT INTO comments (post_id, user_id, body, anon_name)
+            VALUES (?, ?, ?, ?)
+            """,
+            (post_id, user_id, body, pseudonym)# Update USer id when we have sessions
+        )
     db.commit()
 
     return redirect(url_for('view_post', post_id=post_id))
-    
+
+
 if __name__ == '__main__':
     print("Starting AnonReview upload server local host")
     app.run(debug=True)
