@@ -113,6 +113,50 @@ def unblobify(binary):
         file = f.readlines()
     os.remove(filepath)
     return file
+
+#database method to check whether user should be logged in
+def check_user(username, password):
+
+    user_row = user_row = query_db('SELECT * FROM users WHERE username = ?', [username], one=True)
+    credentials_flag = True
+
+    #check if credentials are valid
+    if user_row == None or pbkdf2_sha512.verify(password, user_row[3]) == False:
+
+        credentials_flag = False
+
+    #return tuple with user data
+    return (user_row, credentials_flag, user_row[5])
+
+#database method to check whether selected username and password already exist
+def check_registration(username, email):
+
+    username_row = query_db('SELECT * FROM users WHERE username = ?', [username], one=True)
+    email_row = query_db('SELECT * FROM users WHERE email = ?', [email], one=True)
+
+    existing_username = True
+    existing_email = True
+
+    if username_row == None:
+        existing_username = False
+
+    if email_row == None:
+        existing_email = False
+
+    return (existing_username, existing_email)
+
+
+#database method to add new user to users tables
+def register_user(username, email, pswd, role):
+
+    db = get_db()
+
+    hash_pswd = pbkdf2_sha512.hash(pswd) #hash the given password to store in database
+    query_db('INSERT INTO users (username, email, password_hash, role) ' \
+    'VALUES (?, ?, ?, ?)', [username, email, hash_pswd, role])
+    db.commit()
+
+    return
     
 
 #connects the app and the Flask-Login extension
@@ -149,46 +193,6 @@ def index():
     return render_template("index.html")
 
 
-#database method to check whether user should be logged in
-def check_user(username, password):
-
-    user_row = user_row = query_db('SELECT * FROM users WHERE username = ?', [username], one=True)
-    credentials_flag = True
-    active_flag = True
-
-    #check if credentials are valid
-    if user_row == None or pbkdf2_sha512.verify(password, user_row[3]) == False:
-
-        credentials_flag = False
-    
-    #check if user is active (not banned or suspended)
-    elif user_row[5] == False:
-
-        active_flag = False
-
-    #return tuple with user data
-    return (user_row, credentials_flag, active_flag)
-
-#database method to check whether selected username and password already exist
-def check_registration(username, email):
-
-    existing_username = query_db('SELECT * FROM users WHERE username = ?', [username], one=True)
-    existing_email = query_db('SELECT * FROM users WHERE email = ?', [email], one=True)
-
-    return (existing_username, existing_email)
-
-
-#database method to add new user to users tables
-def register_user(username, email, pswd, role):
-
-    db = get_db()
-
-    hash_pswd = pbkdf2_sha512.hash(pswd) #hash the given password to store in database
-    query_db('INSERT INTO users (username, email, password_hash, role) ' \
-    'VALUES (?, ?, ?, ?)', [username, email, hash_pswd, role])
-    db.commit()
-
-    return
 
 #route for login page
 @app.route('/login', methods=['POST', 'GET'])
@@ -245,7 +249,7 @@ def register():
         existing_email = registration_data[1]
 
         #if neither exist, register the user and redirect to login
-        if existing_username == None and existing_email == None:
+        if existing_username == False and existing_email == False:
 
             if form.password.data != form.password_check.data:
                 return render_template("register.html", form=form, different_passwords = True)
@@ -256,11 +260,11 @@ def register():
             return redirect("/login")
         
         #if username exists, inform user and do not register
-        elif existing_username != None:
+        elif existing_username != False:
             return render_template("register.html", form=form, username_already_exists = True)
         
         #if email exists inform user and do not register
-        elif existing_email != None:
+        elif existing_email != False:
             return render_template("register.html", form=form, email_already_exists = True)
            
     return render_template("register.html", form=form, already_exists = False)
