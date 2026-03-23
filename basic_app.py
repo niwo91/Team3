@@ -148,6 +148,48 @@ def index():
     '''
     return render_template("index.html")
 
+
+#database method to check whether user should be logged in
+def check_user(username, password):
+
+    user_row = user_row = query_db('SELECT * FROM users WHERE username = ?', [username], one=True)
+    credentials_flag = True
+    active_flag = True
+
+    #check if credentials are valid
+    if user_row == None or pbkdf2_sha512.verify(password, user_row[3]) == False:
+
+        credentials_flag = False
+    
+    #check if user is active (not banned or suspended)
+    elif user_row[5] == False:
+
+        active_flag = False
+
+    #return tuple with user data
+    return (user_row, credentials_flag, active_flag)
+
+#database method to check whether selected username and password already exist
+def check_registration(username, email):
+
+    existing_username = query_db('SELECT * FROM users WHERE username = ?', [username], one=True)
+    existing_email = query_db('SELECT * FROM users WHERE email = ?', [email], one=True)
+
+    return (existing_username, existing_email)
+
+
+#database method to add new user to users tables
+def register_user(username, email, pswd, role):
+
+    db = get_db()
+
+    hash_pswd = pbkdf2_sha512.hash(pswd) #hash the given password to store in database
+    query_db('INSERT INTO users (username, email, password_hash, role) ' \
+    'VALUES (?, ?, ?, ?)', [username, email, hash_pswd, role])
+    db.commit()
+
+    return
+
 #route for login page
 @app.route('/login', methods=['POST', 'GET'])
 def login():
@@ -160,21 +202,19 @@ def login():
 
     #handles form validation, makes sure request is POST
     if form.validate_on_submit():
-        user_row = query_db('SELECT * FROM users WHERE username = ?', [form.user_name.data], one=True)
+        user_data = check_user(form.user_name.data, form.password.data)
+        user_row = user_data[0]
+        valid_credentials = user_data[1]
+        user_active = user_data[2]
 
-        if user_row == None:
+        if valid_credentials == False:
             return render_template('login.html', form=form, invalid_login=True)
         
-        hash = user_row[3]
-        active = user_row[5]
-        pswd_verify = pbkdf2_sha512.verify(form.password.data, hash) #check whether given password matches hash
         
-        if pswd_verify == False:
-            return render_template('login.html', form=form, invalid_login=True)
-        
-        elif active == False:
+        elif user_active == False:
             return render_template('login.html', form=form, not_active=True)
 
+        #if credentials are valid and user is active, log in
         else:
             user_obj = User(user_row[0], user_row[1], user_row[4], user_row[5]) #create User object
             login_user(user_obj)
@@ -198,9 +238,11 @@ def register():
 
     if form.validate_on_submit():
 
+        registration_data = check_registration(form.user_name.data, form.email.data)
+
         #check if username and email exist in database
-        existing_username = query_db('SELECT * FROM users WHERE username = ?', [form.user_name.data], one=True)
-        existing_email = query_db('SELECT * FROM users WHERE email = ?', [form.email.data], one=True)
+        existing_username = registration_data[0]
+        existing_email = registration_data[1]
 
         #if neither exist, register the user and redirect to login
         if existing_username == None and existing_email == None:
@@ -208,10 +250,7 @@ def register():
             if form.password.data != form.password_check.data:
                 return render_template("register.html", form=form, different_passwords = True)
             
-            hash_pswd = pbkdf2_sha512.hash(form.password.data) #hash the given password to store in database
-            query_db('INSERT INTO users (username, email, password_hash, role) ' \
-            'VALUES (?, ?, ?, ?)', [form.user_name.data, form.email.data, hash_pswd, form.role.data])
-            db.commit()
+            register_user(form.user_name.data, form.email.data, form.password.data, form.role.data)
             
             flash("Registration successful! Please log in.") #inform user that registration was successful
             return redirect("/login")
