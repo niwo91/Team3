@@ -173,16 +173,25 @@ td, th {
     margin-left: auto; /* pushes icon to the right */
 }
 
+.comment-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px; /* slightly tighter spacing */
+}
+
 .report-icon {
     background: none;
     border: none;
-    color: #dc2626; /* red-600 */
-    font-size: 1.3rem;
+    color: #dc2626;
+    font-size: 0.9rem;   /* smaller icon */
     cursor: pointer;
     padding: 0;
-    line-height: 1;
+    opacity: 0.75;       /* softer default look */
+    transform: translateY(-1px); /* aligns visually with text */
 }
 
 .report-icon:hover {
-    color: #b91c1c; /* darker red */
+    color: #b91c1c;
+    opacity: 1;
 }
