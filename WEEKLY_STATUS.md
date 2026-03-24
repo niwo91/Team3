@@ -154,3 +154,45 @@ the file grows large.
 - Faisal: Created the delete post functionality, connected file names to database
 - Adeline: Created the filter buttons, moved delete post to post view page and added deletion permissions.
 ---
+
+
+### Reporting Period
+**Week:** 5
+**Meeting Held:** 
+**Meeting Date:** March 23th, 2026
+**Meeting Duration: 20 minutes** 
+**Meeting Format:** Zoom
+
+### Progress Since Last Week/Completed Tasks
+- Updated User table to include password hash. Created password hash function. Added test users.
+- Created blobify/unblobify functions for post attachments. Updated Database to hold binary blobs
+- Created a comment votes table. Updated view post page to display comment votes and comments on line numbers
+- Created a reports table to ensure comments and posts can be flagged.
+---
+### Planned Tasks for Next Week
+- Nandini - Create the test suite and finish the tests for login and registration data access methods.
+- Nick - Create identified tests for Database
+- Faisal - Create identified methods for database
+- Adeline - Integrate reporting into the dashboard
+---
+### Blockers and Issues
+* Merging
+* Database planning
+---
+### Risks and Mitigation
+**Identified Risk:Deleting Comments and Comment interaction**
+- Mitigation: User priviliges/User ID check 
+**Identified Risk:Anyone can sign up to be any role**
+- Mitigation: Sign up form for elevated priviliges in the future.
+**Identified Risk:Lots of people working on DB file at the same time**
+- Mitigation: Communication
+---
+### Team Reflection
+* More backend progress vs front-end progess
+---
+### Individual Contributions This Week
+- Nandini - Updated User table to include password hash. Created password hash function. Added test users.
+- Nick - Created blobify/unblobify functions for post attachments. Updated Database to hold binary blobs
+- Faisal - Created a comment votes table. Updated view post page to display comment votes and comments on line numbers
+- Adeline - Created a reports table to ensure comments and posts can be flagged.
+---
