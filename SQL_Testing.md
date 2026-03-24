@@ -257,33 +257,159 @@ Each table has at least one access method.
 
 ---
 
-# Access Method: 
+# Access Method: check_user
 
 ### Description
+Compares login form data to users table data for login
 
 ### Parameters
+- username (string)
+- password (string)
+
+### Return Values
+- Tuple containing user record, flag for credentials (True if valid username and password), and active status from is_active (True if user is not banned or suspended).
 
 ### Tests
+
+**Use Case Name:** Verify valid login 
+
+**Pre-conditions:** User should exist 
+
+**Test Steps:**
+
+1. Enter username and password for user in login form
+
+**Expected Result:** User record, credential flag = True, active = True returned
+
+**Post-conditions:** User should be logged in and redirected to dashboard
+
+**Use Case Name:** Identify invalid login credentials (nonexistent username)
+
+**Pre-conditions:** Username should not exist in users table
+
+**Test Steps:**
+
+1. Enter nonexistent username in login form
+
+**Expected Result:** None (for user record), credential flag = False, active = True/False (Depends on is_active) returned
+
+**Post-conditions:** User should stay on login page and see message stating that credentials were invalid (message does not specify whether username, password, or both were incorrect)
 
 ---
 
-# Access Method: 
+**Use Case Name:** Identify invalid login credentials (incorrect password)
 
-### Description
+**Pre-conditions:** User should exist, hashed password in database should not match password entered in form when verified
 
-### Parameters
+**Test Steps:**
+1. Enter incorrect password for user
 
-### Tests
+**Expected Result:** User record, credential flag = False, active = True/False (Depends on is_active) returned
+
+**Post-conditions:** User should stay on login page and see message stating that credentials were invalid (message does not specify whether username, password, or both were incorrect)
 
 ---
 
-# Access Method: 
+**Use Case Name:** Identify inactive user
+
+**Pre-conditions:** User should exist, is_active column in users table = False
+
+**Test Steps:**
+
+1. Enter correct username and password for user in login form
+
+**Expected Result:** User record, credential flag = True, active = False returned
+
+**Post-conditions:** User should stay on login page and see message stating that they were banned or suspended, and should contact admin for more details
+
+---
+
+# Access Method: check_registration
 
 ### Description
+Compares registration form data to users table data for registration
 
 ### Parameters
+- username (string)
+- email (string)
+
+### Return Values
+- Tuple containing Boolean values for whether username exists, whether email exists
 
 ### Tests
+
+**Use Case Name:** Verify valid registration data
+
+**Pre-conditions:** Users with entered username and/or email should not exist
+
+**Test Steps:**
+
+1. Enter a unique username and email in the registration form, along with password (minimum 10 characters) and selected user role
+
+**Expected Result:** False, False returned
+
+**Post-conditions:** register_user should be called
+
+---
+
+**Use Case Name:** Identify existing username
+
+**Pre-conditions:** User with entered username should exist
+
+**Test Steps:**
+
+1. Enter an existing username in the registration form, along with email, password (minimum 10 characters) and selected user role
+
+**Expected Result:** existing_username = True, existing_email = True/False (depends on whether entered email exists) returned
+
+**Post-conditions:** register_user should not be called, user should stay on registration page and see message stating that account with entered username exists
+
+---
+
+**Use Case Name:** Identify existing email
+
+**Pre-conditions:** User with entered email should exist
+
+**Test Steps:**
+
+1. Enter a unique username and existing email in the registration form
+
+**Expected Result:** existing_username = False, existing_email = True returned
+
+**Post-conditions:** register_user should not be called, user should stay on registration page and see message stating that account with entered email exist
+
+
+---
+
+# Access Method: register_user
+
+### Description
+Adds a new record to users table on successful registration
+
+### Parameters
+- username (string)
+- email (string)
+- pswd (string)
+- role (string)
+
+### Return Values
+
+None
+
+### Tests
+
+**Use Case Name:** Register user
+
+**Pre-conditions:** User with entered username and password should not exist
+
+**Test Steps:**
+
+1. Enter a unique username and email in the registration form, along with password (minimum 10 characters) and selected user role
+
+**Expected Result:** User record added to users table
+
+**Post-conditions:** User should be redirected to login page and notified that registration was successful. User should be able to log in successfully.
+
 
 ---
 
