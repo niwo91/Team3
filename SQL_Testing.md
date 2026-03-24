@@ -24,6 +24,7 @@ Our current implementation uses the following tables:
 - posts
 - comments
 - comment_votes
+- reports
 
 Each of these tables is described below. <br><br> *Note: All tests are conditioned on the database running*
 
@@ -80,6 +81,7 @@ Stores information for users of AnonReview.
 * One-to-many with *posts*
 * One-to-many with *comments*
 * One-to-many with *comment_votes*
+* One-to-many with *reports*
 ### Table Tests
 **Use Case:** Registering a User <br>
 **Description:** Verify a new user is stored in the database correctly when registered <br>
@@ -93,6 +95,7 @@ Stores information for users of AnonReview.
 **Actual Result:** <br>
 **Status:** <br>
 **Post-conditions:** User persists
+
 ---
 
 ## 3) Table: posts
@@ -114,11 +117,13 @@ Stores information about users posts to the AnonReview platform
 | anon_name| Anonymous name of user for display| |
 |Created_at| Time when post was created| Default is current timestamp|
 |Updated_at| Time when post was updated | Default is current timestamp|
+|reported|Bool of if the post has gotten reported| Default is 0|
 
 ### Relationships
 * Many-to-one with *categories*
 * Many-to-one with *users*
 * One-to-many with *comments*
+* one-to-many with *reports*
 ### Table Tests
 **Use Case:** Creating a post <br>
 **Description:** Verify a post is succesfully inserted when a post is created <br>
@@ -132,6 +137,7 @@ Stores information about users posts to the AnonReview platform
 **Actual Result:** <br>
 **Status:** <br>
 **Post-conditions:** Post persists
+
 ---
 
 ## 4) Table: comments
@@ -152,12 +158,14 @@ Stores any comments related to a particular post
 |upvotes|Stores number of upvotes for comment| Default is zero|
 |downvotes|Stores number of downvotes for comment| Default is zero|
 |created_at|Stores when comment was created| Default is current timestamp|
+|reported|Bool of if the comment has gotten reported| Default is 0|
 
 
 ### Relationships
 * Many-to-one with *posts*
 * Many-to-one with *users*
 * One-to-many with *comment_votes*
+* One-to-many with *reports*
 ### Table Tests
 **Use Case:** Creating a comment <br>
 **Description:** Verify a post is succesfully inserted when a comment is created <br>
@@ -177,6 +185,7 @@ Stores any comments related to a particular post
 ## 5) Table: comment_votes
 
 ### Table Description
+Stores data for upvotes and downvotes on comments
 
 ### Fields
 | Field Name | Field Description | Field Constraints |
@@ -202,6 +211,44 @@ Stores any comments related to a particular post
 **Actual Result:** <br>
 **Status:** <br>
 **Post-conditions:** Comment_vote persists
+
+---
+
+## 6) Table: Reports
+
+### Table Description
+Table to hold information for "reported" comments/Posts on the AnonReview platform.
+
+### Fields
+| Field Name | Field Description | Field Constraints |
+|------------|-------------------|-------------------|
+|Report_id|Unique category identifier|Primary Key|
+|user_id| Foreign Key which references the user table|Foregin Key, Not Null|
+|post_id|Foreign Key which references the posts table|Foreign Key, Not Null|
+|comment_id|Foreign Key which references the comments table|Foreign Key, Not Null|
+|reason| Reason for flag| |
+|created_at| Time report was created| Defaults to current timestamp|
+
+
+### Relationships
+- Many-to-one relationship with *users*
+- Many-to-one relationship with *posts*
+- Many-to-one relationship with *comments*
+  
+### Table Tests
+**Use Case:** Reporting a comment or post <br>
+**Description:** Verify the report is inserted correctly to the reports table <br>
+**Pre-conditions:** Database running <br>
+
+**Test Steps:**
+1. Insert Valid reports row <br>
+2. Query report by report_id <br>
+
+**Expected Result:** report is inserted correctly <br>
+**Actual Result:** <br>
+**Status:** <br>
+**Post-conditions:** report persists
+
 
 ---
 
