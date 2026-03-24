@@ -9,7 +9,13 @@
 
 <div class="container">
 
-<h2>{{ post.title }}</h2>
+<h2 class="post-title">
+    {{ post.title }}
+    <form action="{{ url_for('report_post', post_id=post.post_id) }}" method="POST" class="report-form">
+        <button type="submit" class="report-icon" title="Report">❗</button>
+    </form>
+</h2>
+
 <p><strong>{{ post.anon_name }}</strong> wrote:</p>
 <p>{{ post.body }}</p>
 
@@ -17,6 +23,7 @@
 <table class="code-view">
 {% for line in lines %}
 <tr>
+
     <!-- LINE NUMBER -->
     <td class="line-number">{{ loop.index }}</td>
 
@@ -25,10 +32,10 @@
         <pre>{{ line }}</pre>
     </td>
 
-    <!-- 🔥 INLINE COMMENTS COLUMN -->
+    <!-- INLINE COMMENTS COLUMN -->
     <td class="inline-comments">
 
-        <!-- ADD COMMENT (for this line) -->
+        <!-- ADD COMMENT FOR THIS LINE -->
         <form method="POST" action="{{ url_for('add_comment', post_id=post.post_id) }}">
             <input type="hidden" name="line_number" value="{{ loop.index }}">
             <input name="body" placeholder="Comment..." required>
@@ -39,6 +46,12 @@
         {% if loop.index in comments_by_line %}
             {% for c in comments_by_line[loop.index] %}
                 <div class="comment-box">
+
+                    <!-- REPORT COMMENT -->
+                    <form action="{{ url_for('report_comment', comment_id=c.comment_id) }}" method="POST" class="report-form">
+                        <button type="submit" class="report-icon" title="Report">❗</button>
+                    </form>
+
                     <strong>{{ c.anon_name }}</strong>: {{ c.body }}
 
                     <div>
@@ -50,6 +63,7 @@
                         <button name="vote" value="up">▲</button>
                         <button name="vote" value="down">▼</button>
                     </form>
+
                 </div>
             {% endfor %}
         {% endif %}
@@ -62,21 +76,29 @@
 
 <hr>
 
-<!-- 🔥 GENERAL COMMENTS -->
+<!-- GENERAL COMMENTS -->
 <h2>Comments</h2>
 
 {% for c in general_comments %}
     <div class="comment-box">
-        <strong>{{ c.anon_name }}</strong>: {{ c.body }}
 
-        <div>
-            👍 {{ c.upvotes }} | 👎 {{ c.downvotes }}
+        <div class="comment-header">
+            <strong>{{ c.anon_name }}</strong>: {{ c.body }}
         </div>
 
-        <form method="POST" action="{{ url_for('vote_comment', comment_id=c.comment_id) }}">
-            <button name="vote" value="up">▲</button>
-            <button name="vote" value="down">▼</button>
-        </form>
+        <div class="comment-actions">
+            <span>👍 {{ c.upvotes }} | 👎 {{ c.downvotes }}</span>
+
+            <form method="POST" action="{{ url_for('vote_comment', comment_id=c.comment_id) }}">
+                <button name="vote" value="up">▲</button>
+                <button name="vote" value="down">▼</button>
+            </form>
+
+            <form action="{{ url_for('report_comment', comment_id=c.comment_id) }}" method="POST">
+                <button type="submit" class="report-icon" title="Report">❗</button>
+            </form>
+        </div>
+
     </div>
 {% endfor %}
 

@@ -524,6 +524,61 @@ def add_comment(post_id):
 
     return redirect(url_for('view_post', post_id=post_id))
 
+@app.route('/report/post/<int:post_id>', methods=['POST'])
+@login_required
+def report_post(post_id):
+    reason = request.form.get('reason', 'No reason provided')
+    user_id = session['user_id']
+
+    conn = get_db()
+    conn.execute("""
+        INSERT INTO reports (user_id, post_id, reason)
+        VALUES (?, ?, ?)
+    """, (user_id, post_id, reason))
+
+    conn.execute("""
+        UPDATE posts SET reported = 1 WHERE post_id = ?
+    """, (post_id,))
+
+    conn.commit()
+    return redirect(url_for('view_post', post_id=post_id))
+
+@app.route('/report/comment/<int:comment_id>', methods=['POST'])
+@login_required
+def report_comment(comment_id):
+    reason = request.form.get('reason', 'No reason provided')
+    user_id = session['user_id']
+
+    conn = get_db()
+    conn.execute("""
+        INSERT INTO reports (user_id, comment_id, reason)
+        VALUES (?, ?, ?)
+    """, (user_id, comment_id, reason))
+
+    conn.execute("""
+        UPDATE comments SET reported = 1 WHERE comment_id = ?
+    """, (comment_id,))
+
+    conn.commit()
+    return redirect(request.referrer)
+
+@app.route('/admin/reports')
+@login_required
+def view_reports():
+    if session.get('role') not in ('admin', 'moderator'):
+        return "Unauthorized", 403
+
+    conn = get_db()
+    reports = conn.execute("""
+        SELECT r.*, u.username, p.title AS post_title, c.body AS comment_body
+        FROM reports r
+        LEFT JOIN users u ON r.user_id = u.user_id
+        LEFT JOIN posts p ON r.post_id = p.post_id
+        LEFT JOIN comments c ON r.comment_id = c.comment_id
+        ORDER BY r.created_at DESC
+    """).fetchall()
+
+    return render_template('admin_reports.html', reports=reports)
 
 if __name__ == '__main__':
     print("Starting AnonReview upload server local host")

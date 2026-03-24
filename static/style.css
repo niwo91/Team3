@@ -161,3 +161,28 @@ td, th {
 .delete-button:hover {
     color: #ef4444; /* red-500 */
 }
+
+.post-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.report-form {
+    display: inline;
+    margin-left: auto; /* pushes icon to the right */
+}
+
+.report-icon {
+    background: none;
+    border: none;
+    color: #dc2626; /* red-600 */
+    font-size: 1.3rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.report-icon:hover {
+    color: #b91c1c; /* darker red */
+}
