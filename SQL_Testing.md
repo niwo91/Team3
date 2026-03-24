@@ -413,74 +413,234 @@ None
 
 ---
 
-# Access Method: 
+# Access Method: get_categories
 
 ### Description
+Returns all categories in the category table
 
 ### Parameters
+None
 
 ### Tests
+**Use Case Name:** Fetch categories to display when creating a post or viewing the dashboard
+
+**Pre-conditions:** Database is running, At least one category exists
+
+**Test Steps:**
+
+1. Query the database to ensure it returns all category names
+
+**Expected Result:** All Category names are returned
+
+**Post-conditions:** Category records persist.
 
 ---
 
-# Access Method: 
+# Access Method: create_post
 
 ### Description
+Adds a post record to the database
 
 ### Parameters
+user_id, category_id, title, body, attachment_name, attachment_blob, attachment_type
 
 ### Tests
+**Use Case Name:** Confirm the record has been inserted into the posts table
+
+**Pre-conditions:** Database is running
+
+**Test Steps:**
+
+1. Query the database to ensure it returns the record correctly and correctly creates an incremented post_id.
+
+**Expected Result:** Record is inserted correctly, post_id is incremented correctly
+
+**Post-conditions:** Category records persist.
 
 ---
 
-# Access Method: 
+# Access Method: get_post
 
 ### Description
+Fetches data for a post from the *posts* database
 
 ### Parameters
+Post ID
 
 ### Tests
+**Use Case Name:** Query the post by id for display in view_post
+
+**Pre-conditions:** Database is running
+
+**Test Steps:**
+
+1. Query the database and ensure all data is pulled correctly for a post with the post_id given
+
+**Expected Result:** All data is retrieved correctly.
+
+**Post-conditions:** Post record persists.
 
 ---
 
-# Access Method: 
+# Access Method: delete_post
 
 ### Description
+Deletes a post
 
 ### Parameters
+post_id
 
 ### Tests
+**Use Case Name:** Deletes the post when clicking on delete post
+
+**Pre-conditions:** Database is running
+
+**Test Steps:**
+
+1. Delete the record from the posts table and all associated comment records.
+
+**Expected Result:** All data is deleted correctly.
+
+**Post-conditions:** post record does not persist.
 
 ---
 
-# Access Method: 
+# Access Method: add_comment
 
 ### Description
+Adds a comment to a post
 
 ### Parameters
+post_id, user_id, body, anon_name, line_number
 
 ### Tests
+**Use Case Name:** Confirm the record has been inserted into the comments table
+
+**Pre-conditions:** Database is running
+
+**Test Steps:**
+
+1. Query the database to ensure it returns the record correctly and correctly creates an incremented comment_id.
+
+**Expected Result:** Record is inserted correctly, comment_id is incremented correctly
+
+**Post-conditions:** Comment records persist.
 
 ---
 
-# Access Method: 
+# Access Method: get_comment
 
 ### Description
+Fetches a comment from the database for display on the post related to the comment.
 
 ### Parameters
+post_id, user_id
 
 ### Tests
+**Use Case Name:** Query comments for all comments related to a particular post, display comment body and anonymous user name.
+
+**Pre-conditions:** Database is running
+
+**Test Steps:**
+
+1. Query the database and ensure all data is pulled correctly for comments related to a particular post
+
+**Expected Result:** All data is retrieved correctly.
+
+**Post-conditions:** Comment record persists.
 
 ---
 
-# Access Method: 
+# Access Method: get_votes
 
 ### Description
+Fetch downvotes and upvotes related to a particular comment
 
 ### Parameters
+comment_id
 
 ### Tests
+**Use Case Name:** Query comment_votes for all votes related to a particular comment
+
+**Pre-conditions:** Database is running
+
+**Test Steps:**
+
+1. Query the database and ensure all data is pulled correctly for comments_votes related to a particular comment.
+
+**Expected Result:** All data is retrieved correctly.
+
+**Post-conditions:** Comment_vote record persists.
 
 ---
 
+# Access Method: Flag_item
+
+### Description
+Adds a record for a comment and/or a post which has been flagged for review
+
+### Parameters
+post_id, comment_id
+
+### Tests
+**Use Case Name:** Confirm the record has been inserted into the records table
+
+**Pre-conditions:** Database is running
+
+**Test Steps:**
+
+1. Query the database to ensure it returns the reported/flagged item has been added to the reports table.
+
+**Expected Result:** Record is inserted correctly, report_id is incremented correctly
+
+**Post-conditions:** reports records persist.
+
+---
+
+## Page-to-Database Mapping
+
+| Page | Tables Accessed |
+|----|----------------|
+| Login | users |
+|Registration| Users
+| Dashboard | users, categories, posts |
+| view post | posts, comments, comment_votes |
+| create post| users, posts, categories|
+| index page| None|
+
+---
 # Page Data Access Tests
+
+**Use Case Name:** Dashboard shows categories and posts
+
+**Description:** Dashboard should show all recent posts and you should be able to query by categories
+
+**Pre-conditions:** User is logged into dashboard, posts exist, categories exists
+
+**Test Steps:** 
+1. Login to the dashboard
+   
+**Expected Result:** Dashboard displays category filters and all recent posts
+
+**Post-conditions:** None
+
+**Use Case Name:** View post
+
+**Description:** Viewing a post should show all post related content along with any comments and comment votes.
+
+**Pre-conditions:** User is logged in and viewing a post
+
+**Test Steps:** 
+1. Login to the dashboard
+2. View a post
+   
+**Expected Result:** Post displays data and comments correctly.
+
+**Post-conditions:** None
+
+---
+
+## Notes
+- Constraints enforced at DB
+- Tests executable via integration test suite
+
