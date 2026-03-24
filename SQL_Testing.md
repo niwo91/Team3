@@ -1,7 +1,9 @@
 # SQL_TESTING.md
 ## Project Milestone 5: SQL DESIGN
-**Project:** AnonReview
+
+**Project:** AnonReview <br>
 **Purpose:** Database design and testing specifications for developers
+
 ---
 ## Overview
 This document describes AnonReviews database schema, the relationship between tables, and the methods which 
