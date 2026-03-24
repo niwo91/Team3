@@ -21,6 +21,7 @@ class RegistrationForm(FlaskForm):
 
     user_name = StringField("Username", validators=[DataRequired()])
     password = PasswordField("Password", validators=[DataRequired(), Length(min=10, message="Password is too short")])
+    password_check = PasswordField("Re-enter Password", validators=[DataRequired(), Length(min=10, message="Password is too short")])
     email = EmailField("Email", validators=[DataRequired()])
     role = SelectField("Role", choices=['student', 'teacher', 'admin', 'moderator'], validators=[DataRequired()])
     submit = SubmitField("Register")
