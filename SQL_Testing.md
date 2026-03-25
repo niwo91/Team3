@@ -214,7 +214,7 @@ Stores data for upvotes and downvotes on comments
 
 ---
 
-## 6) Table: Reports
+## 6) Table: reports
 
 ### Table Description
 Table to hold information for "reported" comments/Posts on the AnonReview platform.
@@ -223,7 +223,7 @@ Table to hold information for "reported" comments/Posts on the AnonReview platfo
 | Field Name | Field Description | Field Constraints |
 |------------|-------------------|-------------------|
 |Report_id|Unique category identifier|Primary Key|
-|user_id| Foreign Key which references the user table|Foregin Key, Not Null|
+|user_id| Foreign Key which references the user table|Foreign Key, Not Null|
 |post_id|Foreign Key which references the posts table|Foreign Key, Not Null|
 |comment_id|Foreign Key which references the comments table|Foreign Key, Not Null|
 |reason| Reason for flag| |
@@ -282,6 +282,8 @@ Compares login form data to users table data for login
 **Expected Result:** User record, credential flag = True, active = True returned
 
 **Post-conditions:** User should be logged in and redirected to dashboard
+
+---
 
 **Use Case Name:** Identify invalid login credentials (nonexistent username)
 

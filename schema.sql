@@ -36,6 +36,7 @@ CREATE TABLE posts (
     anon_name TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    reported INTEGER CHECK(reported IN (0, 1)) DEFAULT 0, --0 is not reported
     FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (category_id) REFERENCES categories(category_id)
 );
@@ -52,6 +53,7 @@ CREATE TABLE comments (
     upvotes        INTEGER DEFAULT 0,
     downvotes      INTEGER DEFAULT 0,
     created_at     TEXT DEFAULT CURRENT_TIMESTAMP,
+    reported       INTEGER CHECK(reported IN (0, 1)) DEFAULT 0, --0 is not reported
     FOREIGN KEY (post_id) REFERENCES posts(post_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
@@ -64,4 +66,16 @@ CREATE TABLE comment_votes (
     UNIQUE(user_id, comment_id),
     FOREIGN KEY (comment_id) REFERENCES comments(comment_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+CREATE TABLE reports (
+    report_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    post_id INTEGER NOT NULL,
+    comment_id INTEGER NOT NULL,
+    reason TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (post_id) REFERENCES posts(post_id),
+    FOREIGN KEY (comment_id) REFERENCES comments(comment_id)
 );
