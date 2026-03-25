@@ -225,7 +225,7 @@ Table to hold information for "reported" comments/Posts on the AnonReview platfo
 |Report_id|Unique category identifier|Primary Key|
 |user_id| Foreign Key which references the user table|Foreign Key, Not Null|
 |post_id|Foreign Key which references the posts table|Foreign Key, Not Null|
-|comment_id|Foreign Key which references the comments table|Foreign Key, Not Null|
+|comment_id|Foreign Key which references the comments table|Foreign Key|
 |reason| Reason for flag| |
 |created_at| Time report was created| Defaults to current timestamp|
 

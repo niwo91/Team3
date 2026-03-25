@@ -72,7 +72,7 @@ CREATE TABLE reports (
     report_id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     post_id INTEGER NOT NULL,
-    comment_id INTEGER NOT NULL,
+    comment_id INTEGER,
     reason TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id),

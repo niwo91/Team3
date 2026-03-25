@@ -32,8 +32,7 @@ def fill(db_filename):
     c.execute("INSERT INTO posts SELECT * FROM anonreview.posts;")
     c.execute("INSERT INTO comments SELECT * FROM anonreview.comments;")
     c.execute("INSERT INTO comment_votes SELECT * FROM anonreview.comment_votes;")
-    #c.execute("INSERT INTO reports SELECT * FROM anonreview.reports;") 
-    # INSERT does not work as reports.comment_id has NOT NULL constraint. probably because reports table is empty right now?
+    c.execute("INSERT INTO reports SELECT * FROM anonreview.reports;")
 
     
     conn.commit()
