@@ -2,6 +2,7 @@
 # Database Access Methods for AnonReview
 
 from werkzeug.security import generate_password_hash, check_password_hash
+from passlib.hash import pbkdf2_sha512
 from flask import g
 import sqlite3
 
@@ -9,7 +10,7 @@ import sqlite3
 
 def get_db():
     if 'db' not in g:
-        g.db = sqlite3.connect('database.db')
+        g.db = sqlite3.connect('test.db')
         g.db.row_factory = sqlite3.Row
     return g.db
 
@@ -35,10 +36,10 @@ def check_user(username, password):
     if not user:
         return None, False, False
 
-    valid_password = check_password_hash(user["password_hash"], password)
+    valid_password = pbkdf2_sha512.verify(password, user["password_hash"])
     is_active = user["is_active"] == 1
 
-    return user, valid_password, is_active
+    return [user["user_id"], user["username"], user["role"]], valid_password, is_active
 
 
 # 2. check_registration
@@ -78,7 +79,7 @@ def register_user(username, email, password, role):
 # 4. get_categories
 
 
-def get_categories():
+'''def get_categories():
     return query_db("SELECT * FROM categories")
 
 # 5. create_post
@@ -213,4 +214,4 @@ def flag_item(user_id, post_id=None, comment_id=None, reason=None):
     if comment_id:
         db.execute("UPDATE comments SET reported = 1 WHERE comment_id = ?", (comment_id,))
 
-    db.commit()
+    db.commit()'''
