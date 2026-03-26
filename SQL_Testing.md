@@ -348,7 +348,7 @@ Compares registration form data to users table data for registration
 
 1. Enter a unique username and email in the registration form, along with password (minimum 10 characters) and selected user role
 
-**Expected Result:** False, False returned
+**Expected Result:** existing_username = False, existing_email = False returned
 
 **Post-conditions:** register_user should be called
 
