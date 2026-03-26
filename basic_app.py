@@ -117,46 +117,52 @@ def unblobify(binary):
 #database method to check whether user should be logged in
 def check_user(username, password):
 
-    user_row = user_row = query_db('SELECT * FROM users WHERE username = ?', [username], one=True)
-    credentials_flag = True
+    user = query_db(
+        "SELECT * FROM users WHERE username = ?",
+        (username,),
+        one=True
+    )
 
-    #check if credentials are valid
-    if user_row == None or pbkdf2_sha512.verify(password, user_row[3]) == False:
+    if not user:
+        return None, False, False
 
-        credentials_flag = False
+    valid_password = pbkdf2_sha512.verify(password, user["password_hash"])
+    is_active = user["is_active"] == 1
 
-    #return tuple with user data
-    return (user_row, credentials_flag, user_row[5])
+    return [user["user_id"], user["username"], user["role"]], valid_password, is_active
 
 #database method to check whether selected username and password already exist
 def check_registration(username, email):
 
-    username_row = query_db('SELECT * FROM users WHERE username = ?', [username], one=True)
-    email_row = query_db('SELECT * FROM users WHERE email = ?', [email], one=True)
+    existing_username = query_db(
+        "SELECT 1 FROM users WHERE username = ?",
+        (username,),
+        one=True
+    )
 
-    existing_username = True
-    existing_email = True
+    existing_email = query_db(
+        "SELECT 1 FROM users WHERE email = ?",
+        (email,),
+        one=True
+    )
 
-    if username_row == None:
-        existing_username = False
-
-    if email_row == None:
-        existing_email = False
-
-    return (existing_username, existing_email)
+    return bool(existing_username), bool(existing_email)
 
 
 #database method to add new user to users tables
-def register_user(username, email, pswd, role):
-
+def register_user(username, email, password, role):
+    
     db = get_db()
+    hashed_password = pbkdf2_sha512.hash(password)
 
-    hash_pswd = pbkdf2_sha512.hash(pswd) #hash the given password to store in database
-    query_db('INSERT INTO users (username, email, password_hash, role) ' \
-    'VALUES (?, ?, ?, ?)', [username, email, hash_pswd, role])
+    db.execute(
+        """
+        INSERT INTO users (username, email, password_hash, role)
+        VALUES (?, ?, ?, ?)
+        """,
+        (username, email, hashed_password, role)
+    )
     db.commit()
-
-    return
     
 
 #connects the app and the Flask-Login extension
@@ -208,7 +214,7 @@ def login():
     if form.validate_on_submit():
         user_data = check_user(form.user_name.data, form.password.data)
         user_row = user_data[0]
-        valid_credentials = user_data[1]
+        valid_credentials = (user_row != None and user_data[1] == True)
         user_active = user_data[2]
 
         if valid_credentials == False:
@@ -220,10 +226,10 @@ def login():
 
         #if credentials are valid and user is active, log in
         else:
-            user_obj = User(user_row[0], user_row[1], user_row[4], user_row[5]) #create User object
+            user_obj = User(user_row[0], user_row[1], user_row[2], user_active) #create User object
             login_user(user_obj)
             session["user_id"] = user_row[0]
-            session["role"] = user_row[4] 
+            session["role"] = user_row[2] 
             session.permanent = True #session is permanent so that config can handle timeouts
             return redirect("/dashboard")
 
@@ -244,12 +250,8 @@ def register():
 
         registration_data = check_registration(form.user_name.data, form.email.data)
 
-        #check if username and email exist in database
-        existing_username = registration_data[0]
-        existing_email = registration_data[1]
-
-        #if neither exist, register the user and redirect to login
-        if existing_username == False and existing_email == False:
+        #if username and email do not exist, and password check matches password, register the user and redirect to login
+        if registration_data == (False, False):
 
             if form.password.data != form.password_check.data:
                 return render_template("register.html", form=form, different_passwords = True)
@@ -260,11 +262,11 @@ def register():
             return redirect("/login")
         
         #if username exists, inform user and do not register
-        elif existing_username != False:
+        elif registration_data[0] != False:
             return render_template("register.html", form=form, username_already_exists = True)
         
         #if email exists inform user and do not register
-        elif existing_email != False:
+        elif registration_data[1] != False:
             return render_template("register.html", form=form, email_already_exists = True)
            
     return render_template("register.html", form=form, already_exists = False)

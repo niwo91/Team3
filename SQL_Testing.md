@@ -267,7 +267,7 @@ Compares login form data to users table data for login
 - password (string)
 
 ### Return Values
-- Tuple containing user record, flag for credentials (True if valid username and password), and active status from is_active (True if user is not banned or suspended).
+- Tuple containing list of user data required for user object, bool for valid password (True if valid password), and active status from is_active column (True if user is not banned or suspended).
 
 ### Tests
 
@@ -279,7 +279,7 @@ Compares login form data to users table data for login
 
 1. Enter username and password for user in login form
 
-**Expected Result:** User record, credential flag = True, active = True returned
+**Expected Result:** [user_id, username, role], valid_password = True, is_active = True returned
 
 **Post-conditions:** User should be logged in and redirected to dashboard
 
@@ -293,7 +293,7 @@ Compares login form data to users table data for login
 
 1. Enter nonexistent username in login form
 
-**Expected Result:** None (for user record), credential flag = False, active = True/False (Depends on is_active) returned
+**Expected Result:** None, valid_password = False, is_active = False returned
 
 **Post-conditions:** User should stay on login page and see message stating that credentials were invalid (message does not specify whether username, password, or both were incorrect)
 
@@ -306,7 +306,7 @@ Compares login form data to users table data for login
 **Test Steps:**
 1. Enter incorrect password for user
 
-**Expected Result:** User record, credential flag = False, active = True/False (Depends on is_active) returned
+**Expected Result:** [user_id, username, role], valid_password = False, is_active = True/False (depending on is_active column) returned
 
 **Post-conditions:** User should stay on login page and see message stating that credentials were invalid (message does not specify whether username, password, or both were incorrect)
 
@@ -320,7 +320,7 @@ Compares login form data to users table data for login
 
 1. Enter correct username and password for user in login form
 
-**Expected Result:** User record, credential flag = True, active = False returned
+**Expected Result:** [user_id, username, role], valid_password = True, is_active = False
 
 **Post-conditions:** User should stay on login page and see message stating that they were banned or suspended, and should contact admin for more details
 
@@ -386,12 +386,12 @@ Compares registration form data to users table data for registration
 # Access Method: register_user
 
 ### Description
-Adds a new record to users table on successful registration
+Adds a new record to users table on successful registration. Only called if check_registration returns (False, False) and password re-entry is correct in registration form.
 
 ### Parameters
 - username (string)
 - email (string)
-- pswd (string)
+- password (string)
 - role (string)
 
 ### Return Values

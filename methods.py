@@ -65,7 +65,7 @@ def check_registration(username, email):
 
 def register_user(username, email, password, role):
     db = get_db()
-    hashed_password = generate_password_hash(password)
+    hashed_password = pbkdf2_sha512.hash(password)
 
     db.execute(
         """
@@ -79,7 +79,7 @@ def register_user(username, email, password, role):
 # 4. get_categories
 
 
-'''def get_categories():
+def get_categories():
     return query_db("SELECT * FROM categories")
 
 # 5. create_post
@@ -214,4 +214,4 @@ def flag_item(user_id, post_id=None, comment_id=None, reason=None):
     if comment_id:
         db.execute("UPDATE comments SET reported = 1 WHERE comment_id = ?", (comment_id,))
 
-    db.commit()'''
+    db.commit()
