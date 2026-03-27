@@ -34,6 +34,9 @@ class dbUsers_Test(unittest.TestCase):
             pass
 
     
+    ###Tests for check_user
+
+    
     #tests login for registered and active user
     def test_valid_user(self):
         
@@ -70,6 +73,49 @@ class dbUsers_Test(unittest.TestCase):
         user_data = methods.check_user('inactive_student', 'TestPass03')
 
         self.assertEqual(user_data, ([6, 'inactive_student', 'student'], True, False))
+
+
+     ###Tests for check_registration
+
+    
+    def test_valid_registration(self):
+
+        valid_reg_data = methods.check_registration('test_new', 'testnew@student.com')
+
+        self.assertEqual(valid_reg_data, (False, False))
+
+
+    def test_existing_username(self):
+
+        existing_username_user = methods.check_registration('test_student', 'testnew@student.com')
+
+        self.assertEqual(existing_username_user, (True, False))
+
+    
+    def test_existing_email(self):
+
+        existing_email_user = methods.check_registration('test_new', 'test1@student.com')
+
+        self.assertEqual(existing_email_user, (False, True))
+
+
+     ###Tests for register_user
+
+
+    def test_add_user(self):
+
+        #make sure user does not exist first
+        user_not_added = methods.check_user('test_new', 'TestNew01')
+
+        self.assertEqual(user_not_added, (None, False, False))
+        
+
+        methods.register_user('test_new', 'testnew@student.com', 'TestNew01', 'student')
+
+        user_added = methods.check_user('test_new', 'TestNew01')
+
+        self.assertEqual(user_added, ([6, 'test_new', 'student'], True, True))
+
 
 
 '''
