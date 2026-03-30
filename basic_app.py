@@ -34,6 +34,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=60) #user session times out after an hour if no requests made
 app.config['SESSION_REFRESH_EACH_REQUEST'] = True #timer is reset by requests
 
+
 def allowed_file(filename):
     '''
     Check if the file has an allowed extension.
@@ -178,6 +179,13 @@ class User(UserMixin):
         self.role = role
         self.active = active
 
+# Load moderation category ID safely
+with app.app_context():
+    row = query_db(
+        "SELECT category_id FROM categories WHERE name = 'Reported Items'",
+        one=True
+    )
+    REPORTED_CATEGORY_ID = row['category_id'] if row else None
     
 #login manager reloads user ID stored in session
 @login_manager.user_loader
@@ -331,33 +339,44 @@ def delete_post(post_id):
 @app.route('/create_post', methods=['GET', 'POST'])
 @login_required
 def create_post():
-    categories = query_db("SELECT * FROM categories")
+
+    # --- CATEGORY FILTERING (for GET and POST) ---
+    if current_user.role in ('admin', 'moderator'):
+        categories = query_db("SELECT * FROM categories")
+    else:
+        categories = query_db(
+            "SELECT * FROM categories WHERE name != 'Reported Items'"
+        )
+
+    # If categories table is empty, initialize it
     if not categories:
         init_categories()
-        
+
+    # --- HANDLE POST REQUEST ---
     if request.method == 'POST':
         user_id = current_user.id
         title = request.form['title']
         body = request.form['body']
         category_id = request.form.get('category_id')
+
+        if current_user.role not in ('admin', 'moderator') and int(category_id) == REPORTED_CATEGORY_ID:
+            return "Unauthorized", 403
+
         attachment = request.files['file']
         attachment_type = None
         filename = None
         attachment_blob = None
 
-        # Check file validity
-        # Attachment not required
-        if attachment.filename != None and attachment.filename != '':
+        if attachment and attachment.filename:
             if not allowed_file(attachment.filename):
                 return jsonify({'error': f'File type not allowed. Allowed types: {ALLOWED_EXTENSIONS}'}), 400
-            else:
-                filename = secure_filename(attachment.filename)
-                attachment_blob = blobify(attachment)
-                attachment_type = filename.split('.')[-1]
+
+            filename = secure_filename(attachment.filename)
+            attachment_blob = blobify(attachment)
+            attachment_type = filename.split('.')[-1]
 
         db = get_db()
 
-        # Insert post without anon_name first
         cursor = db.execute(
             """
             INSERT INTO posts (user_id, category_id, title, body, attachment_name, attachment_blob, attachment_type)
@@ -367,11 +386,8 @@ def create_post():
         )
         post_id = cursor.lastrowid
 
-        # Generate pseudonym
-        ## Update 1 with user id when user sessions are working
         pseudonym = anon_name(1, post_id)
 
-        # Update post with anon_name
         db.execute(
             "UPDATE posts SET anon_name = ? WHERE post_id = ?",
             (pseudonym, post_id)
@@ -380,7 +396,6 @@ def create_post():
 
         return redirect(url_for('view_post', post_id=post_id))
 
-    categories = query_db("SELECT * FROM categories")
     return render_template("create_post.html", categories=categories)
 
 
@@ -476,17 +491,36 @@ def vote_comment(comment_id):
 def dashboard():
     category_id = request.args.get('category')
 
+    # If a category is selected
     if category_id:
+        # Prevent normal users from accessing the moderation queue
+        if current_user.role not in ('admin', 'moderator') and int(category_id) == REPORTED_CATEGORY_ID:
+            return "Unauthorized", 403
+
         posts = query_db(
             "SELECT * FROM posts WHERE category_id = ? ORDER BY created_at DESC",
             (category_id,)
         )
-    else:
-        posts = query_db(
-            "SELECT * FROM posts ORDER BY created_at DESC"
-        )
 
-    categories = query_db("SELECT * FROM categories")
+    else:
+        # No category selected
+        if current_user.role in ('admin', 'moderator'):
+            posts = query_db(
+                "SELECT * FROM posts ORDER BY created_at DESC"
+            )
+        else:
+            posts = query_db(
+                "SELECT * FROM posts WHERE category_id != ? ORDER BY created_at DESC",
+                (REPORTED_CATEGORY_ID,)
+            )
+
+    # Category list (admins/mods see all, users see all except moderation queue)
+    if current_user.role in ('admin', 'moderator'):
+        categories = query_db("SELECT * FROM categories")
+    else:
+        categories = query_db(
+            "SELECT * FROM categories WHERE name != 'Reported Items'"
+        )
 
     return render_template(
         "dashboard.html",
@@ -551,18 +585,33 @@ def report_comment(comment_id):
     reason = request.form.get('reason', 'No reason provided')
     user_id = session['user_id']
 
-    conn = get_db()
-    conn.execute("""
-        INSERT INTO reports (user_id, comment_id, reason)
-        VALUES (?, ?, ?)
-    """, (user_id, comment_id, reason))
+    db = get_db()
 
-    conn.execute("""
-        UPDATE comments SET reported = 1 WHERE comment_id = ?
-    """, (comment_id,))
+    # Insert report + mark comment
+    db.execute(
+        "INSERT INTO reports (user_id, comment_id, reason) VALUES (?, ?, ?)",
+        (user_id, comment_id, reason)
+    )
+    db.execute(
+        "UPDATE comments SET reported = 1 WHERE comment_id = ?",
+        (comment_id,)
+    )
 
-    conn.commit()
+    # Move parent post into moderation category
+    post = query_db(
+        "SELECT post_id FROM comments WHERE comment_id = ?",
+        (comment_id,),
+        one=True
+    )
+    if post:
+        db.execute(
+            "UPDATE posts SET reported = 1, category_id = ? WHERE post_id = ?",
+            (REPORTED_CATEGORY_ID, post['post_id'])
+        )
+
+    db.commit()
     return redirect(request.referrer)
+
 
 @app.route('/admin/reports')
 @login_required
@@ -570,8 +619,8 @@ def view_reports():
     if session.get('role') not in ('admin', 'moderator'):
         return "Unauthorized", 403
 
-    conn = get_db()
-    reports = conn.execute("""
+    db = get_db()
+    reports = db.execute("""
         SELECT r.*, u.username, p.title AS post_title, c.body AS comment_body
         FROM reports r
         LEFT JOIN users u ON r.user_id = u.user_id
