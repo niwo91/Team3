@@ -196,3 +196,85 @@ the file grows large.
 - Faisal - Created a comment votes table. Updated view post page to display comment votes and comments on line numbers
 - Adeline - Created a reports table to ensure comments and posts can be flagged.
 ---
+
+
+### Reporting Period
+**Week:** 4
+**Meeting Held:** 
+**Meeting Date:** March 16th, 2026
+**Meeting Duration: 40 minutes** 
+**Meeting Format:** Zoom
+
+### Progress Since Last Week/Completed Tasks
+- Created user sessions for login. Implemented restricted views based off the login session. Session timeout (60mins).Combined upload file route, view post route with the create post route and view file route. Created the delete post functionality, connected file names to database. Created the filter buttons, moved delete post to post view page and added deletion permissions.
+---
+### Planned Tasks for Next Week
+- Nandini - Add a hashing function for the password. Will add new users with new passwords.
+- Nick - Files to blobs and storing them in SQLite as blobs. Update User table with active/inactive bool. Delete extra code.
+- Faisal - Create inline comments and upvote and downvote functionality.
+- Adeline - Fix the new post page. Make a user profile page for updates.
+---
+### Blockers and Issues
+* Lack of posts.
+* Database planning.
+---
+### Risks and Mitigation
+**Identified Risk:Anyone could delete posts**
+- Mitigation: User priviliges. 
+**Identified Risk:Overwriting files with current implementation**
+- Mitigation: Storing files as blobs.
+**Identified Risk:Lots of people working on DB file at the same time**
+- Mitigation: Communication
+---
+### Team Reflection
+* We've made a lot of progress with the app.
+---
+### Individual Contributions This Week
+- Nandini: Created user sessions for login. Implemented restricted views based off the login session. Session timeout (60mins).
+- Nick: Combined upload file route, view post route with the create post route and view file route.
+- Faisal: Created the delete post functionality, connected file names to database
+- Adeline: Created the filter buttons, moved delete post to post view page and added deletion permissions.
+---
+
+
+### Reporting Period
+**Week:** 6
+**Meeting Held:** 
+**Meeting Date:** March 30th, 2026
+**Meeting Duration:  minutes** 
+**Meeting Format:** Zoom
+
+### Progress Since Last Week/Completed Tasks
+- Made the test suites for each table. Added tests for user table methods.
+- Added tests fro posts, categories, comments tables.
+- Created all the DB methods.
+- Reporting dashboard and ability to delete comments.
+---
+### Planned Tasks for Next Week
+- Nandini - Establish a way to elevate user roles - admin/moderator can accept requests.
+- Nick - Flesh out tests, refactor, CI/CD 
+- Faisal - Add PDF, html, images, docs, removing ability to like own comment
+- Adeline - Notification system, new reported post to moderators. Remove the dashboard from the first page.
+- Looking ahead Next week - Cloud, profile changes, seeing what your permissions are, add more test cases
+---
+### Blockers and Issues
+* Merging
+* Database planning
+---
+### Risks and Mitigation
+**Identified Risk:Deleting Comments and Comment interaction**
+- Mitigation: Only the original commentor, admins, or moderators can delete comments.
+**Identified Risk:Anyone can sign up to be any role**
+- Mitigation: Sign up form for elevated priviliges in the future.
+**Identified Risk:Lots of people working on DB file at the same time**
+- Mitigation: Communication
+---
+### Team Reflection
+* It looks great.
+---
+### Individual Contributions This Week
+- Nandini -Made the test suites for each table. Added tests for user table methods.
+- Nick - Added tests for posts, categories, comments tables.
+- Faisal - Created all the DB methods.
+- Adeline - Reporting dashboard and ability to delete comments.
+
