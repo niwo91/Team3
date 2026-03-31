@@ -186,7 +186,7 @@ with app.app_context():
         one=True
     )
     REPORTED_CATEGORY_ID = row['category_id'] if row else None
-    
+
 #login manager reloads user ID stored in session
 @login_manager.user_loader
 def load_user(user_id):
@@ -567,14 +567,16 @@ def report_post(post_id):
     user_id = session['user_id']
 
     conn = get_db()
+
     conn.execute("""
         INSERT INTO reports (user_id, post_id, reason)
         VALUES (?, ?, ?)
     """, (user_id, post_id, reason))
 
     conn.execute("""
-        UPDATE posts SET reported = 1 WHERE post_id = ?
-    """, (post_id,))
+        UPDATE posts SET reported = 1, category_id = ?
+        WHERE post_id = ?
+    """, (REPORTED_CATEGORY_ID, post_id))
 
     conn.commit()
     return redirect(url_for('view_post', post_id=post_id))
@@ -630,6 +632,50 @@ def view_reports():
     """).fetchall()
 
     return render_template('admin_reports.html', reports=reports)
+
+@app.route('/unreport/post/<int:post_id>', methods=['POST'])
+@login_required
+def unreport_post(post_id):
+    if current_user.role not in ('admin', 'moderator'):
+        return "Unauthorized", 403
+
+    db = get_db()
+
+    # Move post back to a normal category (default: General)
+    db.execute(
+        "UPDATE posts SET reported = 0, category_id = 1 WHERE post_id = ?",
+        (post_id,)
+    )
+
+    db.commit()
+    return redirect(request.referrer)
+
+@app.route('/delete/comment/<int:comment_id>', methods=['POST'])
+@login_required
+def delete_comment(comment_id):
+    if current_user.role not in ('admin', 'moderator'):
+        return "Unauthorized", 403
+
+    db = get_db()
+    db.execute("DELETE FROM comments WHERE comment_id = ?", (comment_id,))
+    db.commit()
+
+    return redirect(request.referrer)
+
+@app.route('/unreport/comment/<int:comment_id>', methods=['POST'])
+@login_required
+def unreport_comment(comment_id):
+    if current_user.role not in ('admin', 'moderator'):
+        return "Unauthorized", 403
+
+    db = get_db()
+    db.execute(
+        "UPDATE comments SET reported = 0 WHERE comment_id = ?",
+        (comment_id,)
+    )
+    db.commit()
+
+    return redirect(request.referrer)
 
 if __name__ == '__main__':
     print("Starting AnonReview upload server local host")

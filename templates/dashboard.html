@@ -37,11 +37,16 @@
         <div class="post-feed">
             {% for p in posts %}
                 <div class="post-card">
+
                     <h2 class="post-title">
                         <a href="{{ url_for('view_post', post_id=p.post_id) }}">
                             {{ p.title }}
                         </a>
                     </h2>
+
+                    {% if p.reported %}
+                        <span class="reported-badge">Reported</span>
+                    {% endif %}
 
                     <p class="post-meta small-text">Posted by {{ p.anon_name }}</p>
 
@@ -52,6 +57,12 @@
                     <a class="read-more small-text" href="{{ url_for('view_post', post_id=p.post_id) }}">
                         Read full post →
                     </a>
+                    
+                    {% if current_user.role in ['admin', 'moderator'] and p.reported %}
+                        <form action="{{ url_for('unreport_post', post_id=p.post_id) }}" method="POST" style="margin-top: 10px;">
+                            <button class="delete-button" type="submit">Unreport Post</button>
+                        </form>
+                    {% endif %}
 
                 </div>
             {% endfor %}
