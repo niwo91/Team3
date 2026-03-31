@@ -14,6 +14,10 @@ from werkzeug.utils import secure_filename
 from Constants import *
 from anonymizer import anon_name
 
+import docx
+from bs4 import BeautifulSoup
+import PyPDF2
+
 #reads from the .env file (should be in root of LOCAL repo)
 load_dotenv()
 
@@ -22,7 +26,11 @@ app = Flask(__name__)
 # Define allowed file extensions based on flags
 ALLOWED_EXTENSIONS = {}
 if FLAG__FILE_EXTENSION_PY_TXT == 1:
-    ALLOWED_EXTENSIONS = {'txt', 'py'}
+    ALLOWED_EXTENSIONS = {
+    'txt', 'py',
+    'pdf', 'html',
+    'doc', 'docx'
+}
 elif FLAG__FILE_EXTENSION_PY_TXT_PDF_IMG == 1:
     ALLOWED_EXTENSIONS = {'txt', 'py', 'pdf', 'png', 'jpg', 'jpeg'}
 
@@ -100,20 +108,47 @@ def blobify(file):
     return data
 
 
-def unblobify(binary):
+def unblobify(binary, file_type):
     """
     @param binary of file
     @return file for display
     """
-    # Only works with .txt and .py for now
-    file = ""
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], 'temp_file')
+
     with open(filepath, "wb") as f:
         f.write(binary)
-    with open(filepath, 'r', encoding='utf-8') as f:
-        file = f.readlines()
+
+    content = []
+
+    # TEXT / CODE line-by-line
+    if file_type in ['txt', 'py']:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.readlines()
+
+    # HTML treat like text (line-by-line)
+    elif file_type == 'html':
+        with open(filepath, 'r', encoding='utf-8') as f:
+            soup = BeautifulSoup(f, "html.parser")
+            content = soup.prettify().split('\n')
+
+    # PDF extract text
+    elif file_type == 'pdf':
+        reader = PyPDF2.PdfReader(filepath)
+        for page in reader.pages:
+            content.extend(page.extract_text().split('\n'))
+
+    # DOCX → paragraphs
+    elif file_type == 'docx':
+        doc = docx.Document(filepath)
+        content = [p.text for p in doc.paragraphs]
+
+    # DOC (old)  fallback (no good parser)
+    elif file_type == 'doc':
+        content = ["Preview not supported. Download file instead."]
+
     os.remove(filepath)
-    return file
+    return content
+
 
 #database method to check whether user should be logged in
 def check_user(username, password):
@@ -437,7 +472,10 @@ def view_post(post_id):
 
     # Handle file display
     if filename:
-        content = unblobify(post["attachment_blob"])
+        content = unblobify(
+            post["attachment_blob"],
+            post["attachment_type"]
+        )
 
         return render_template(
             "view_post.html",
