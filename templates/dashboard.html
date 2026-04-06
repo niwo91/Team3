@@ -12,6 +12,9 @@
         <div class="top-bar">
             <a class="back-button" href="{{ url_for('index') }}">← Home</a>
             <a class="create-button" href="{{ url_for('create_post') }}">+ New Post</a>
+            {% if current_user.role == 'student' %}
+                <a class="create-button" href="{{ url_for('role_update') }}">Update Role</a>
+            {% endif %}
             <a class="logout-button" href="{{ url_for('logout') }}">Log Out</a>
         </div>
 

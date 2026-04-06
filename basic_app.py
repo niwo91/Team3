@@ -9,7 +9,7 @@ from flask import Flask, request, jsonify, render_template, g, send_from_directo
 from flask_login import LoginManager, UserMixin, login_user, current_user, logout_user, login_required
 from passlib.hash import pbkdf2_sha512
 from datetime import timedelta
-from forms import LoginForm, RegistrationForm
+from forms import LoginForm, RegistrationForm, RoleUpdateForm
 from werkzeug.utils import secure_filename
 from Constants import *
 from anonymizer import anon_name
@@ -714,6 +714,24 @@ def unreport_comment(comment_id):
     db.commit()
 
     return redirect(request.referrer)
+
+
+#route for role update form
+@app.route('/role_update', methods=['POST', 'GET'])
+@login_required
+def role_update():
+
+    form = RoleUpdateForm()
+
+    if form.validate_on_submit():
+        #add the user id and role from form to role_update table with a new db method
+
+        return render_template('role_update_form.html', form=form, submit_complete=True)
+    
+
+    return render_template('role_update_form.html', form=form, submit_complete=False)
+
+
 
 if __name__ == '__main__':
     print("Starting AnonReview upload server local host")

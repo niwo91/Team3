@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Role</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <div class="container">
+
+        <div class="top-bar">
+            <a class="back-button" href="{{ url_for('dashboard') }}">← Back</a>
+            <a class="logout-button" href="{{ url_for('logout') }}">Log Out</a>
+        </div>
+
+    <h2>User Role Update</h2>
+
+    {% if submit_complete == True %}
+
+    <p>You have successfully submitted your request! Please wait for moderator or administrator approval.</p>
+
+    {% elif submit_complete == False %}
+
+    <h3>Please select the role you would like to be considered for:</h3>
+
+    <form method="post" action="">
+
+            {{ form.hidden_tag() }}
+
+            <div>{{ form.role.label }}: {{form.role() }}</div> <br>
+            <div>{{ form.submit() }}</div> <br>
+        
+    </form>
+
+    {% endif %}
+
+</div>
+ 
+</body>
+</html>
