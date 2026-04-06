@@ -13,7 +13,6 @@ from forms import LoginForm, RegistrationForm, RoleUpdateForm
 from werkzeug.utils import secure_filename
 from Constants import *
 from anonymizer import anon_name
-from methods import *
 
 import docx
 from bs4 import BeautifulSoup
@@ -50,6 +49,16 @@ def allowed_file(filename):
     '''
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def get_db():
+    '''
+    Connects to db, or returns active db if already connected
+    '''
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = sqlite3.connect(DATABASE)
+    db.row_factory = sqlite3.Row
+    return db
+
 @app.teardown_appcontext
 def close_connection(exception):
     '''
@@ -71,6 +80,19 @@ def init_categories():
     db.commit()
 
     return "Categories initialized!" 
+
+def query_db(query, args=(), one=False):
+    '''
+    Used to query DB
+    @param query The sqlite3 query for the database
+    @param args A list of arguments to be used in query - replaces ? in query
+    @param one Bool for returning one value or not
+    @return list with query result
+    '''
+    cur = get_db().execute(query, args)
+    rv = cur.fetchall()
+    cur.close()
+    return (rv[0] if rv else None) if one else rv
 
 def blobify(file):
     """
@@ -126,6 +148,58 @@ def unblobify(binary, file_type):
 
     os.remove(filepath)
     return content
+
+
+#database method to check whether user should be logged in
+def check_user(username, password):
+
+    user = query_db(
+        "SELECT * FROM users WHERE username = ?",
+        (username,),
+        one=True
+    )
+
+    if not user:
+        return None, False, False
+
+    valid_password = pbkdf2_sha512.verify(password, user["password_hash"])
+    is_active = user["is_active"] == 1
+
+    return [user["user_id"], user["username"], user["role"]], valid_password, is_active
+
+#database method to check whether selected username and password already exist
+def check_registration(username, email):
+
+    existing_username = query_db(
+        "SELECT 1 FROM users WHERE username = ?",
+        (username,),
+        one=True
+    )
+
+    existing_email = query_db(
+        "SELECT 1 FROM users WHERE email = ?",
+        (email,),
+        one=True
+    )
+
+    return bool(existing_username), bool(existing_email)
+
+
+#database method to add new user to users tables
+def register_user(username, email, password, role):
+    
+    db = get_db()
+    hashed_password = pbkdf2_sha512.hash(password)
+
+    db.execute(
+        """
+        INSERT INTO users (username, email, password_hash, role)
+        VALUES (?, ?, ?, ?)
+        """,
+        (username, email, hashed_password, role)
+    )
+    db.commit()
+    
 
 #connects the app and the Flask-Login extension
 login_manager = LoginManager()
@@ -281,7 +355,19 @@ def delete_post(post_id):
     if not (is_owner or is_admin or is_mod):
         return "Forbidden", 403
 
-    delete_post(post_id)
+    # delete comments related to the post
+    db.execute(
+        "DELETE FROM comments WHERE post_id = ?",
+        (post_id,)
+    )
+
+    # delete the post itself
+    db.execute(
+        "DELETE FROM posts WHERE post_id = ?",
+        (post_id,)
+    )
+
+    db.commit()
 
     return redirect(url_for('dashboard'))
 
@@ -324,13 +410,19 @@ def create_post():
             attachment_blob = blobify(attachment)
             attachment_type = filename.split('.')[-1]
 
-        cursor = create_a_post(user_id, category_id, title, body, filename, attachment_blob, attachment_type)
+        db = get_db()
 
+        cursor = db.execute(
+            """
+            INSERT INTO posts (user_id, category_id, title, body, attachment_name, attachment_blob, attachment_type)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (user_id, category_id, title, body, filename, attachment_blob, attachment_type)
+        )
         post_id = cursor.lastrowid
 
         pseudonym = anon_name(1, post_id)
 
-        db = get_db()
         db.execute(
             "UPDATE posts SET anon_name = ? WHERE post_id = ?",
             (pseudonym, post_id)
@@ -345,12 +437,24 @@ def create_post():
 @app.route('/post/<int:post_id>')
 @login_required
 def view_post(post_id):
-    post = get_post(post_id)
+    post = query_db(
+        "SELECT * FROM posts WHERE post_id = ?",
+        (post_id,),
+        one=True
+    )
 
     if not post:
         return "Post not found", 404
 
-    comments = get_comments(post_id)
+    comments = query_db(
+        """
+        SELECT comment_id, body, anon_name, line_number, upvotes, downvotes
+        FROM comments
+        WHERE post_id = ?
+        ORDER BY created_at ASC
+        """,
+        (post_id,)
+    )
 
     # Group comments
     comments_by_line = {}
@@ -395,7 +499,28 @@ def vote_comment(comment_id):
     vote_type = request.form.get("vote")  # "up" or "down"
     user_id = current_user.id
 
-    vote_a_comment(user_id, comment_id, vote_type)
+    db = get_db()
+
+    existing = query_db(
+        "SELECT * FROM comment_votes WHERE user_id = ? AND comment_id = ?",
+        (user_id, comment_id),
+        one=True
+    )
+
+    if existing:
+        return redirect(request.referrer)
+
+    db.execute(
+        "INSERT INTO comment_votes (user_id, comment_id, vote_type) VALUES (?, ?, ?)",
+        (user_id, comment_id, vote_type)
+    )
+
+    if vote_type == "up":
+        db.execute("UPDATE comments SET upvotes = upvotes + 1 WHERE comment_id = ?", (comment_id,))
+    else:
+        db.execute("UPDATE comments SET downvotes = downvotes + 1 WHERE comment_id = ?", (comment_id,))
+
+    db.commit()
 
     return redirect(request.referrer)
 
@@ -454,9 +579,22 @@ def add_comment(post_id):
     pseudonym = anon_name(user_id, post_id)
     if line_number:
         line_number = int(line_number)
-        add_a_comment(post_id, user_id, body, pseudonym, line_number)
+        db.execute(
+            """
+            INSERT INTO comments (post_id, user_id, body, anon_name, line_number)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (post_id, user_id, body, pseudonym, line_number) # Update USer id when we have sessions
+        )
     else:
-        add_comment(post_id, user_id, body, pseudonym)
+        db.execute(
+            """
+            INSERT INTO comments (post_id, user_id, body, anon_name)
+            VALUES (?, ?, ?, ?)
+            """,
+            (post_id, user_id, body, pseudonym)# Update USer id when we have sessions
+        )
+    db.commit()
 
     return redirect(url_for('view_post', post_id=post_id))
 
@@ -466,8 +604,19 @@ def report_post(post_id):
     reason = request.form.get('reason', 'No reason provided')
     user_id = session['user_id']
 
-    flag_item(user_id, post_id, reason=reason, comment_id=None)
+    conn = get_db()
 
+    conn.execute("""
+        INSERT INTO reports (user_id, post_id, reason)
+        VALUES (?, ?, ?)
+    """, (user_id, post_id, reason))
+
+    conn.execute("""
+        UPDATE posts SET reported = 1, category_id = ?
+        WHERE post_id = ?
+    """, (REPORTED_CATEGORY_ID, post_id))
+
+    conn.commit()
     return redirect(url_for('view_post', post_id=post_id))
 
 @app.route('/report/comment/<int:comment_id>', methods=['POST'])
@@ -478,15 +627,29 @@ def report_comment(comment_id):
 
     db = get_db()
 
+    # Insert report + mark comment
+    db.execute(
+        "INSERT INTO reports (user_id, comment_id, reason) VALUES (?, ?, ?)",
+        (user_id, comment_id, reason)
+    )
+    db.execute(
+        "UPDATE comments SET reported = 1 WHERE comment_id = ?",
+        (comment_id,)
+    )
+
     # Move parent post into moderation category
     post = query_db(
         "SELECT post_id FROM comments WHERE comment_id = ?",
         (comment_id,),
         one=True
     )
+    if post:
+        db.execute(
+            "UPDATE posts SET reported = 1, category_id = ? WHERE post_id = ?",
+            (REPORTED_CATEGORY_ID, post['post_id'])
+        )
 
-    flag_item(user_id, post[0], comment_id, reason)
-
+    db.commit()
     return redirect(request.referrer)
 
 
