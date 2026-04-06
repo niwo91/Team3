@@ -29,11 +29,6 @@ def fill(db_filename):
     c.execute("ATTACH DATABASE 'anonreview.db' AS 'anonreview';")
     c.execute("INSERT INTO users SELECT * FROM anonreview.users;")
     c.execute("INSERT INTO categories SELECT * FROM anonreview.categories;")
-    c.execute("INSERT INTO posts SELECT * FROM anonreview.posts;")
-    c.execute("INSERT INTO comments SELECT * FROM anonreview.comments;")
-    c.execute("INSERT INTO comment_votes SELECT * FROM anonreview.comment_votes;")
-    c.execute("INSERT INTO reports SELECT * FROM anonreview.reports;")
-
     
     conn.commit()
     conn.close()

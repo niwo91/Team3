@@ -198,7 +198,7 @@ def vote_comment(user_id, comment_id, vote_type):
 # 12. flag_item
 
 
-def flag_item(user_id, post_id=None, comment_id=None, reason=None):
+def flag_item(user_id, post_id, comment_id=None, reason=None):
     db = get_db()
 
     db.execute(
@@ -209,9 +209,10 @@ def flag_item(user_id, post_id=None, comment_id=None, reason=None):
         (user_id, post_id, comment_id, reason)
     )
 
-    if post_id:
-        db.execute("UPDATE posts SET reported = 1 WHERE post_id = ?", (post_id,))
+    # Every comment is related to a post ID, this should allow us to report posts and comments
     if comment_id:
         db.execute("UPDATE comments SET reported = 1 WHERE comment_id = ?", (comment_id,))
+    else:
+        db.execute("UPDATE posts SET reported = 1 WHERE post_id = ?", (post_id,))
 
     db.commit()
