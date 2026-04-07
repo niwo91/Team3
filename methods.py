@@ -84,7 +84,7 @@ def get_categories():
 
 # 5. create_post
 
-def create_post(user_id, category_id, title, body,
+def create_a_post(user_id, category_id, title, body,
                 attachment_name=None, attachment_blob=None, attachment_type=None):
 
     db = get_db()
@@ -125,7 +125,7 @@ def delete_post(post_id):
 # 8. add_comment
 
 
-def add_comment(post_id, user_id, body, anon_name, line_number=None):
+def add_a_comment(post_id, user_id, body, anon_name, line_number=None):
     db = get_db()
 
     db.execute(
@@ -160,7 +160,7 @@ def get_votes(comment_id):
 # 11. vote_comment
 
 
-def vote_comment(user_id, comment_id, vote_type):
+def vote_a_comment(user_id, comment_id, vote_type):
     db = get_db()
 
     existing = query_db(
