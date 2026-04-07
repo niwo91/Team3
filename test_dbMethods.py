@@ -186,7 +186,7 @@ class dbPosts_Test(unittest.TestCase):
     def test_create_post(self):
 
         # Test Normal create post 
-        methods.create_post(1, 1, "Test_Title", "Test_Body")
+        methods.create_a_post(1, 1, "Test_Title", "Test_Body")
         
         test_post = methods.query_db("SELECT * FROM posts")
 
@@ -200,14 +200,14 @@ class dbPosts_Test(unittest.TestCase):
 
         # Test NULL value insertions
         with self.assertRaises(sqlite3.IntegrityError):
-            methods.create_post(1, 1, None, "Test_Body")
+            methods.create_a_post(1, 1, None, "Test_Body")
 
         with self.assertRaises(sqlite3.IntegrityError):
-            methods.create_post(1, 1, "Test_Post", None)
+            methods.create_a_post(1, 1, "Test_Post", None)
 
     def test_get_post(self):
         # Insert post
-        methods.create_post(1, 1, "Test_Title", "Test_Body")
+        methods.create_a_post(1, 1, "Test_Title", "Test_Body")
 
         # Get values for testing
         post = methods.query_db("SELECT * FROM posts WHERE post_id = ?;", (1,), one=True)
@@ -219,8 +219,8 @@ class dbPosts_Test(unittest.TestCase):
         
     def test_delete_post(self):
         # Insert post
-        methods.create_post(1, 1, "Test_Title", "Test_Body")
-        methods.add_comment(1, 2, "Test_comment", "Name")
+        methods.create_a_post(1, 1, "Test_Title", "Test_Body")
+        methods.add_a_comment(1, 2, "Test_comment", "Name")
 
         # Delete post
         methods.delete_post(1)
@@ -245,7 +245,7 @@ class dbComments_Test(unittest.TestCase):
         testDB_setup.create("test.db")
         testDB_setup.fill("test.db")
         # Create test post
-        methods.create_post(1, 1, "Test_Title", "Test_Body")
+        methods.create_a_post(1, 1, "Test_Title", "Test_Body")
 
 
     #closes db connection and removes temporary database if it exists
@@ -263,7 +263,7 @@ class dbComments_Test(unittest.TestCase):
 
     def test_add_comment(self):
 
-        methods.add_comment(1, 1, "Test_Body", "Test_Name")
+        methods.add_a_comment(1, 1, "Test_Body", "Test_Name")
 
         comments = methods.query_db("SELECT * FROM comments where post_id = ?;", (1,))
 
@@ -277,17 +277,17 @@ class dbComments_Test(unittest.TestCase):
 
         # Test NULL value insertions
         with self.assertRaises(sqlite3.IntegrityError):
-            methods.add_comment(None, 1, "Test_Body", "Test_Name")
+            methods.add_a_comment(None, 1, "Test_Body", "Test_Name")
         with self.assertRaises(sqlite3.IntegrityError):
-            methods.add_comment(1, None, "Test_Body", "Test_Name")
+            methods.add_a_comment(1, None, "Test_Body", "Test_Name")
         with self.assertRaises(sqlite3.IntegrityError):
-            methods.add_comment(1, 1, None, "Test_Name")
+            methods.add_a_comment(1, 1, None, "Test_Name")
 
     def test_get_comments(self):
 
         # Add Comments
-        methods.add_comment(1, 1, "Test1B", "Test1N")
-        methods.add_comment(1, 2, "Test2B", "Test2N")
+        methods.add_a_comment(1, 1, "Test1B", "Test1N")
+        methods.add_a_comment(1, 2, "Test2B", "Test2N")
 
         db_comments = methods.get_comments(1)
 
@@ -314,8 +314,8 @@ class dbCommentVotes_Test(unittest.TestCase):
         testDB_setup.create("test.db")
         testDB_setup.fill("test.db")
         # Create test post and comment
-        methods.create_post(1, 1, "Test_Title", "Test_Body")
-        methods.add_comment(1, 1, "Test1B", "Test1N")
+        methods.create_a_post(1, 1, "Test_Title", "Test_Body")
+        methods.add_a_comment(1, 1, "Test1B", "Test1N")
 
     #closes db connection and removes temporary database if it exists
     def tearDown(self):
@@ -332,8 +332,8 @@ class dbCommentVotes_Test(unittest.TestCase):
 
     def test_vote_comment(self):
         # Add comment votes, users must be different
-        methods.vote_comment(2, 1, "up") 
-        methods.vote_comment(1, 1, "down")
+        methods.vote_a_comment(2, 1, "up") 
+        methods.vote_a_comment(1, 1, "down")
 
         upvotes = methods.query_db("SELECT upvotes FROM comments WHERE comment_id = ?;", (1,), one=True)
         downvotes = methods.query_db("SELECT downvotes FROM comments WHERE comment_id = ?;", (1,), one=True)
@@ -355,8 +355,8 @@ class dbCommentVotes_Test(unittest.TestCase):
     
     def test_get_votes(self):
         # Add comment votes, users must be different
-        methods.vote_comment(2, 1, "up")
-        methods.vote_comment(1, 1, "down")
+        methods.vote_a_comment(2, 1, "up")
+        methods.vote_a_comment(1, 1, "down")
 
         test1 = [1, 2, 1, "up"]
         test2 = [2, 1, 1, "down"]
@@ -384,8 +384,8 @@ class dbReports_Test(unittest.TestCase):
         testDB_setup.create("test.db")
         testDB_setup.fill("test.db")
         # Create test post and comment
-        methods.create_post(1, 1, "Test_Title", "Test_Body")
-        methods.add_comment(1, 1, "Test1B", "Test1N")
+        methods.create_a_post(1, 1, "Test_Title", "Test_Body")
+        methods.add_a_comment(1, 1, "Test1B", "Test1N")
 
     #closes db connection and removes temporary database if it exists
     def tearDown(self):
