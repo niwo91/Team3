@@ -278,3 +278,47 @@ the file grows large.
 - Faisal - Created all the DB methods.
 - Adeline - Reporting dashboard and ability to delete comments.
 
+
+### Reporting Period
+**Week:** 7
+**Meeting Held:** 
+**Meeting Date:** April 6th, 2026
+**Meeting Duration:  20 minutes** 
+**Meeting Format:** Zoom
+
+### Progress Since Last Week/Completed Tasks
+- Added notification for new posts & comments
+- Form created to update role
+- Expanded file upload types
+- Refactored code to include methods
+
+---
+### Planned Tasks for Next Week
+- Nandini - Finish update role stuff
+- Nick - Update get_db method. Review method names.
+- Faisal - Work on slides, ask about public hosting
+- Adeline - Fix comments so students can delete own comments. Add category to see own posts.
+- All - Work on slides
+  
+---
+### Blockers and Issues
+* Adding a new table, some reports had none as postID - schema issues? - not move reports table data.
+* get_db() issue with testing, pass DB name as argument
+  
+---
+### Risks and Mitigation
+**Identified Risk:Deleting Comments and Comment interaction**
+- Mitigation: Make sure original commentor can delete
+**Identified Risk:Anyone can sign up to be any role**
+- Mitigation: Sign up form for elevated priviliges for
+**Identified Risk:Lots of people working on DB file at the same time**
+- Mitigation: Communication
+---
+### Team Reflection
+* It looks great.
+---
+### Individual Contributions This Week
+- Nandini - Created form for students to request a role update to teacher or mod.
+- Nick - Refactored code
+- Faisal - Expanded file type upload ability
+- Adeline - Added flags for new posts and comments.
