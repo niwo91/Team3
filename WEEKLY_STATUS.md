@@ -220,14 +220,18 @@ the file grows large.
 ---
 ### Risks and Mitigation
 **Identified Risk:Anyone could delete posts**
-- Mitigation: User priviliges. 
+- Mitigation: User priviliges.
+- 
 **Identified Risk:Overwriting files with current implementation**
 - Mitigation: Storing files as blobs.
+  
 **Identified Risk:Lots of people working on DB file at the same time**
 - Mitigation: Communication
+  
 ---
 ### Team Reflection
 * We've made a lot of progress with the app.
+  
 ---
 ### Individual Contributions This Week
 - Nandini: Created user sessions for login. Implemented restricted views based off the login session. Session timeout (60mins).
