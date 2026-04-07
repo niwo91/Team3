@@ -529,9 +529,32 @@ def vote_comment(comment_id):
 def dashboard():
     category_id = request.args.get('category')
 
-    # If a category is selected
+    # Load categories first
+    if current_user.role in ('admin', 'moderator'):
+        categories = query_db("SELECT * FROM categories")
+    else:
+        categories = query_db(
+            "SELECT * FROM categories WHERE name != 'Reported Items'"
+        )
+
+    categories = [dict(c) for c in categories]
+
+    # Add NEW POST flag to categories
+    for cat in categories:
+        new_count = query_db(
+            """
+            SELECT COUNT(*) AS c
+            FROM posts
+            WHERE category_id = ?
+            AND created_at > datetime('now', '-1 day')
+            """,
+            (cat['category_id'],),
+            one=True
+        )['c']
+        cat['has_new'] = new_count > 0
+
+    # Load posts depending on category selection
     if category_id:
-        # Prevent normal users from accessing the moderation queue
         if current_user.role not in ('admin', 'moderator') and int(category_id) == REPORTED_CATEGORY_ID:
             return "Unauthorized", 403
 
@@ -539,26 +562,31 @@ def dashboard():
             "SELECT * FROM posts WHERE category_id = ? ORDER BY created_at DESC",
             (category_id,)
         )
-
     else:
-        # No category selected
         if current_user.role in ('admin', 'moderator'):
-            posts = query_db(
-                "SELECT * FROM posts ORDER BY created_at DESC"
-            )
+            posts = query_db("SELECT * FROM posts ORDER BY created_at DESC")
         else:
             posts = query_db(
                 "SELECT * FROM posts WHERE category_id != ? ORDER BY created_at DESC",
                 (REPORTED_CATEGORY_ID,)
             )
 
-    # Category list (admins/mods see all, users see all except moderation queue)
-    if current_user.role in ('admin', 'moderator'):
-        categories = query_db("SELECT * FROM categories")
-    else:
-        categories = query_db(
-            "SELECT * FROM categories WHERE name != 'Reported Items'"
-        )
+    posts = [dict(p) for p in posts]
+
+    # Add NEW COMMENTS flag to posts
+    for post in posts:
+        recent_comments = query_db(
+            """
+            SELECT COUNT(*) AS c
+            FROM comments
+            WHERE post_id = ?
+            AND created_at > datetime('now', '-1 day')
+            """,
+            (post['post_id'],),
+            one=True
+        )['c']
+
+        post['has_new_comments'] = recent_comments > 0
 
     return render_template(
         "dashboard.html",

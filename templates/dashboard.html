@@ -8,7 +8,6 @@
 <body>
     <div class="container">
 
-        <!-- Top navigation row -->
         <div class="top-bar">
             <a class="back-button" href="{{ url_for('index') }}">← Home</a>
             <a class="create-button" href="{{ url_for('create_post') }}">+ New Post</a>
@@ -21,7 +20,6 @@
         <h1>All Posts</h1>
         <p class="subtitle small-subtitle">Latest activity from the community</p>
 
-        <!-- Category Filter Buttons -->
         <div class="category-buttons">
             <a href="{{ url_for('dashboard') }}"
                class="cat-btn {% if not selected_category %}active{% endif %}">
@@ -32,11 +30,13 @@
                 <a href="{{ url_for('dashboard') }}?category={{ cat.category_id }}"
                    class="cat-btn {% if selected_category == cat.category_id|string %}active{% endif %}">
                     {{ cat.name }}
+                    {% if cat.has_new %}
+                        <span class="new-flag">NEW</span>
+                    {% endif %}
                 </a>
             {% endfor %}
         </div>
 
-        <!-- Expanded post feed -->
         <div class="post-feed">
             {% for p in posts %}
                 <div class="post-card">
@@ -45,6 +45,10 @@
                         <a href="{{ url_for('view_post', post_id=p.post_id) }}">
                             {{ p.title }}
                         </a>
+
+                        {% if p.has_new_comments %}
+                            <span class="new-flag">NEW COMMENTS</span>
+                        {% endif %}
                     </h2>
 
                     {% if p.reported %}

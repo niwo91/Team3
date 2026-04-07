@@ -195,3 +195,13 @@ td, th {
     color: #b91c1c;
     opacity: 1;
 }
+
+.new-flag {
+    background: #ff3b3b;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 10px;
+    margin-left: 6px;
+    font-weight: bold;
+}
