@@ -5,23 +5,32 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from passlib.hash import pbkdf2_sha512
 from flask import g
 import sqlite3
+from Constants import *
 
 # DB Helpers 
 
 def get_db():
-    if 'db' not in g:
-        g.db = sqlite3.connect('test.db')
-        g.db.row_factory = sqlite3.Row
-    return g.db
-
+    '''
+    Connects to db, or returns active db if already connected
+    '''
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = sqlite3.connect(DATABASE)
+    db.row_factory = sqlite3.Row
+    return db
 
 def query_db(query, args=(), one=False):
+    '''
+    Used to query DB
+    @param query The sqlite3 query for the database
+    @param args A list of arguments to be used in query - replaces ? in query
+    @param one Bool for returning one value or not
+    @return list with query result
+    '''
     cur = get_db().execute(query, args)
     rv = cur.fetchall()
     cur.close()
     return (rv[0] if rv else None) if one else rv
-
-
 
 # 1. check_user
 
@@ -89,7 +98,7 @@ def create_a_post(user_id, category_id, title, body,
 
     db = get_db()
 
-    db.execute(
+    cursor = db.execute(
         """
         INSERT INTO posts (user_id, category_id, title, body,
                            attachment_name, attachment_blob, attachment_type)
@@ -100,6 +109,8 @@ def create_a_post(user_id, category_id, title, body,
     )
 
     db.commit()
+    
+    return cursor
 
 # 6. get_post
 
@@ -143,10 +154,14 @@ def add_a_comment(post_id, user_id, body, anon_name, line_number=None):
 
 def get_comments(post_id):
     return query_db(
-        "SELECT * FROM comments WHERE post_id = ? ORDER BY created_at DESC",
+        """
+        SELECT comment_id, body, anon_name, line_number, upvotes, downvotes
+        FROM comments
+        WHERE post_id = ?
+        ORDER BY created_at ASC
+        """,
         (post_id,)
     )
-
 
 # 10. get_votes
 
@@ -212,7 +227,8 @@ def flag_item(user_id, post_id, comment_id=None, reason=None):
     # Every comment is related to a post ID, this should allow us to report posts and comments
     if comment_id:
         db.execute("UPDATE comments SET reported = 1 WHERE comment_id = ?", (comment_id,))
-    else:
+    
+    if post_id:
         db.execute("UPDATE posts SET reported = 1 WHERE post_id = ?", (post_id,))
 
     db.commit()
