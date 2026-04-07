@@ -84,7 +84,7 @@ CREATE TABLE role_update (
 
     request_id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL, 
-    new_role TEXT CHECK(new_role IN ('student', 'teacher', 'admin', 'moderator')),
+    new_role TEXT CHECK(new_role IN ('teacher', 'moderator')),
     decision_complete INTEGER CHECK(decision_complete IN (0, 1)) DEFAULT 0, --1 is complete
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id)
