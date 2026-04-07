@@ -484,7 +484,7 @@ def add_comment(post_id):
         line_number = int(line_number)
         add_a_comment(post_id, user_id, body, pseudonym, line_number)
     else:
-        add_comment(post_id, user_id, body, pseudonym)
+        add_a_comment(post_id, user_id, body, pseudonym)
 
     return redirect(url_for('view_post', post_id=post_id))
 
