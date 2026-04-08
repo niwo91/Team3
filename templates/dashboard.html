@@ -13,6 +13,11 @@
             <a class="create-button" href="{{ url_for('create_post') }}">+ New Post</a>
             {% if current_user.role == 'student' %}
                 <a class="create-button" href="{{ url_for('role_update') }}">Update Role</a>
+
+            {% elif current_user.role == 'moderator' or current_user.role == 'admin' %}
+                <a class="create-button" href="{{ url_for('view_update_requests') }}">Role Update Requests</a>
+
+            
             {% endif %}
             <a class="logout-button" href="{{ url_for('logout') }}">Log Out</a>
         </div>

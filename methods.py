@@ -72,16 +72,16 @@ def check_registration(username, email):
 # 3. register_user
 
 
-def register_user(username, email, password, role):
+def register_user(username, email, password):
     db = get_db()
     hashed_password = pbkdf2_sha512.hash(password)
 
     db.execute(
         """
-        INSERT INTO users (username, email, password_hash, role)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO users (username, email, password_hash)
+        VALUES (?, ?, ?)
         """,
-        (username, email, hashed_password, role)
+        (username, email, hashed_password)
     )
     db.commit()
 
@@ -232,3 +232,90 @@ def flag_item(user_id, post_id, comment_id=None, reason=None):
         db.execute("UPDATE posts SET reported = 1 WHERE post_id = ?", (post_id,))
 
     db.commit()
+
+
+
+def add_request(user_id, new_role):
+    db = get_db()
+
+    db.execute(
+        """
+        INSERT INTO role_update (user_id, new_role)
+        VALUES (?, ?)
+        """,
+        (user_id, new_role)
+    )
+    db.commit()
+
+
+def get_requests():
+    db = get_db()
+
+    requests = query_db(
+        """
+        SELECT u.username, u.email, r.new_role, r.request_id
+        FROM users as u
+        INNER JOIN role_update AS r
+        ON u.user_id = r.user_id
+        WHERE r.decision_complete = 0
+
+        """
+    )
+    
+    return requests
+
+
+#checks if decision for user role update has already been completed. returns True if complete, False otherwise
+def check_decision(request_id):
+
+    db = get_db()
+
+    decision_complete = query_db(
+        """
+        SELECT decision_complete FROM role_update
+        WHERE request_id = ?
+        """,
+        (request_id, )
+    )
+
+    return decision_complete
+
+
+
+#method to approve user role update
+def approve_new_role(new_role, username, request_id):
+    db = get_db()
+
+    #set new role for user
+    db.execute(
+        """
+        UPDATE users SET role = ? WHERE username = ?
+        """,
+        (new_role, username)
+    )
+
+    #mark decision as complete
+    db.execute(
+        """
+        UPDATE role_update SET decision_complete = ? WHERE request_id = ?
+        """,
+        (1, request_id)
+    )
+    db.commit()
+
+
+#method to reject user role update
+def reject_new_role(request_id):
+    db = get_db()
+
+    #mark decision as complete
+    db.execute(
+        """
+        UPDATE role_update SET decision_complete = ? WHERE request_id = ?
+        """,
+        (1, request_id)
+    )
+    db.commit()
+    
+
+

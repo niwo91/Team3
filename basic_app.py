@@ -225,7 +225,7 @@ def register():
             if form.password.data != form.password_check.data:
                 return render_template("register.html", form=form, different_passwords = True)
             
-            register_user(form.user_name.data, form.email.data, form.password.data, form.role.data)
+            register_user(form.user_name.data, form.email.data, form.password.data)
             
             flash("Registration successful! Please log in.") #inform user that registration was successful
             return redirect("/login")
@@ -591,10 +591,61 @@ def role_update():
     if form.validate_on_submit():
         #add the user id and role from form to role_update table with a new db method
 
+        add_request(current_user.id, form.role.data)
+
         return render_template('role_update_form.html', form=form, submit_complete=True)
     
 
     return render_template('role_update_form.html', form=form, submit_complete=False)
+
+
+#route for role update form
+@app.route('/view_update_requests', methods=['POST', 'GET'])
+@login_required
+def view_update_requests():
+
+    requests = get_requests()
+
+    return render_template('update_requests.html', requests = requests)
+
+
+#route for approving role update request
+@app.route('/approve_role_update/<new_role>/<username>/<int:request_id>')
+@login_required
+def approve_role_update(new_role, username, request_id):
+
+    #check if mod or admin has already made decision
+    decision_complete = check_decision(request_id)
+
+    #if decision already made, do not allow current user to make new one
+    if decision_complete == True:
+        flash("Decision already made! Please refresh.") 
+        return redirect("/view_update_requests")
+    
+    #if decision not made, approve the request and redirect to view_update_requests
+    approve_new_role(new_role, username, request_id)
+
+    return redirect(request.referrer)
+
+
+
+#route for rejecting role update request
+@app.route('/reject_role_update/<int:request_id>')
+@login_required
+def reject_role_update(request_id):
+
+    #check if mod or admin has already made decision
+    decision_complete = check_decision(request_id)
+
+    #if decision already made, do not allow current user to make new one
+    if decision_complete == True:
+        flash("Decision already made! Please refresh.") 
+        return redirect("/view_update_requests")
+    
+    #if decision not made, reject the request and redirect to view_update_requests
+    reject_new_role(request_id)
+
+    return redirect(request.referrer)
 
 
 
