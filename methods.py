@@ -235,6 +235,10 @@ def flag_item(user_id, post_id, comment_id=None, reason=None):
 
 
 
+
+#13. add request
+
+#adds a user request for a role update to the role_update table
 def add_request(user_id, new_role):
     db = get_db()
 
@@ -248,6 +252,10 @@ def add_request(user_id, new_role):
     db.commit()
 
 
+
+#14. get_requests
+
+#gets all role update requests from the role_update table (where decision is incomplete)
 def get_requests():
     db = get_db()
 
@@ -265,6 +273,10 @@ def get_requests():
     return requests
 
 
+
+
+#15. check_decision
+
 #checks if decision for user role update has already been completed. returns True if complete, False otherwise
 def check_decision(request_id):
 
@@ -281,6 +293,9 @@ def check_decision(request_id):
     return decision_complete
 
 
+
+
+#16. approve_new_role
 
 #method to approve user role update
 def approve_new_role(new_role, username, request_id):
@@ -303,6 +318,10 @@ def approve_new_role(new_role, username, request_id):
     )
     db.commit()
 
+    
+
+
+#17. reject_new_role
 
 #method to reject user role update
 def reject_new_role(request_id):

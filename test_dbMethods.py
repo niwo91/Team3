@@ -111,7 +111,7 @@ class dbUsers_Test(unittest.TestCase):
         self.assertEqual(user_not_added, (None, False, False))
         
 
-        methods.register_user('test_new', 'testnew@student.com', 'TestNew01', 'student')
+        methods.register_user('test_new', 'testnew@student.com', 'TestNew01')
 
         user_added = methods.check_user('test_new', 'TestNew01')
 
