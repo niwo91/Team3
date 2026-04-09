@@ -56,7 +56,9 @@ def query_db(query, args=(), one=False):
     @param one Bool for returning one value or not
     @return list with query result
     '''
-    cur = get_db().execute(query, args)
+    db = get_db()
+    cur = db.cursor()
+    cur.execute(query, args)
     rv = cur.fetchall()
     cur.close()
     return (rv[0] if rv else None) if one else rv
