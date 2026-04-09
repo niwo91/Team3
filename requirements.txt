@@ -9,3 +9,5 @@ libpass==1.9.3
 beautifulsoup4==4.13.4
 python-docx==0.8.11
 PyPDF2==3.0.1
+gunicorn
+psycopg2-binary

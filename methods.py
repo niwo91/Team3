@@ -4,20 +4,49 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 from passlib.hash import pbkdf2_sha512
 from flask import g
-import sqlite3
+import psycopg2
+import psycopg2.extras
+import os
 from Constants import *
 
 # DB Helpers 
 
+def init_db():
+    db = get_db()
+    cur = db.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        user_id SERIAL PRIMARY KEY,
+        username TEXT,
+        email TEXT,
+        password TEXT,
+        role TEXT,
+        active BOOLEAN
+    );
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS posts (
+        post_id SERIAL PRIMARY KEY,
+        user_id INTEGER,
+        title TEXT,
+        body TEXT,
+        attachment_name TEXT,
+        attachment_blob BYTEA,
+        attachment_type TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+
+    db.commit()
+
 def get_db():
-    '''
-    Connects to db, or returns active db if already connected
-    '''
-    db = getattr(g, '_database', None)
-    if db is None:
-        db = g._database = sqlite3.connect(DATABASE)
-    db.row_factory = sqlite3.Row
-    return db
+    if 'db' not in g:
+        DATABASE_URL = os.environ.get("DATABASE_URL")
+        g.db = psycopg2.connect(DATABASE_URL)
+        g.db.cursor_factory = psycopg2.extras.DictCursor
+    return g.db
 
 def query_db(query, args=(), one=False):
     '''

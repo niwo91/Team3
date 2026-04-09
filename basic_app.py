@@ -1,7 +1,8 @@
 # AnonReview - Flask File Upload App
 # Team 3: HomeworkBusters
 import os
-import sqlite3
+import psycopg2
+import os
 from dotenv import load_dotenv
 import time
 
@@ -647,8 +648,9 @@ def reject_role_update(request_id):
 
     return redirect(request.referrer)
 
-
+with app.app_context():
+    init_db()
 
 if __name__ == '__main__':
     print("Starting AnonReview upload server local host")
-    app.run(debug=True)
+    app.run()
