@@ -63,11 +63,11 @@ def close_connection(exception):
 def init_categories():
     db = get_db()
 
-    db.execute("INSERT INTO categories (name) VALUES (?)", ("Homework",))
-    db.execute("INSERT INTO categories (name) VALUES (?)", ("Project",))
-    db.execute("INSERT INTO categories (name) VALUES (?)", ("Exam Prep",))
-    db.execute("INSERT INTO categories (name) VALUES (?)", ("General",))
-    db.execute("INSERT INTO categories (name) VALUES (?)", ("Code Review",))
+    db.execute("INSERT INTO categories (name) VALUES (%s)", ("Homework",))
+    db.execute("INSERT INTO categories (name) VALUES (%s)", ("Project",))
+    db.execute("INSERT INTO categories (name) VALUES (%s)", ("Exam Prep",))
+    db.execute("INSERT INTO categories (name) VALUES (%s)", ("General",))
+    db.execute("INSERT INTO categories (name) VALUES (%s)", ("Code Review",))
 
     db.commit()
 
@@ -142,17 +142,18 @@ class User(UserMixin):
         self.active = active
 
 # Load moderation category ID safely
-with app.app_context():
+def get_reported_category_id():
     row = query_db(
-        "SELECT category_id FROM categories WHERE name = 'Reported Items'",
+        "SELECT category_id FROM categories WHERE name = %s",
+        ("Reported Items",),
         one=True
     )
-    REPORTED_CATEGORY_ID = row['category_id'] if row else None
+    return row["category_id"] if row else None
 
 #login manager reloads user ID stored in session
 @login_manager.user_loader
 def load_user(user_id):
-    user_row = query_db('SELECT * FROM users WHERE user_id = ?', [user_id], one=True)
+    user_row = query_db('SELECT * FROM users WHERE user_id = %s', [user_id], one=True)
 
     if user_row == None:
         return None
@@ -262,7 +263,7 @@ def delete_post(post_id):
 
     # get file name from DB
     row = query_db(
-        "SELECT post_id, user_id FROM posts WHERE post_id = ?",
+        "SELECT post_id, user_id FROM posts WHERE post_id = %s",
         (post_id,),
         one=True
     )
@@ -309,7 +310,7 @@ def create_post():
         body = request.form['body']
         category_id = request.form.get('category_id')
 
-        if current_user.role not in ('admin', 'moderator') and int(category_id) == REPORTED_CATEGORY_ID:
+        if current_user.role not in ('admin', 'moderator') and int(category_id) == get_reported_category_id():
             return "Unauthorized", 403
 
         attachment = request.files['file']
@@ -333,7 +334,7 @@ def create_post():
 
         db = get_db()
         db.execute(
-            "UPDATE posts SET anon_name = ? WHERE post_id = ?",
+            "UPDATE posts SET anon_name = %s WHERE post_id = %s",
             (pseudonym, post_id)
         )
         db.commit()
@@ -421,7 +422,7 @@ def dashboard():
             """
             SELECT COUNT(*) AS c
             FROM posts
-            WHERE category_id = ?
+            WHERE category_id = %s
             AND created_at > datetime('now', '-1 day')
             """,
             (cat['category_id'],),
@@ -431,11 +432,11 @@ def dashboard():
 
     # Load posts depending on category selection
     if category_id:
-        if current_user.role not in ('admin', 'moderator') and int(category_id) == REPORTED_CATEGORY_ID:
+        if current_user.role not in ('admin', 'moderator') and int(category_id) == get_reported_category_id():
             return "Unauthorized", 403
 
         posts = query_db(
-            "SELECT * FROM posts WHERE category_id = ? ORDER BY created_at DESC",
+            "SELECT * FROM posts WHERE category_id = %s ORDER BY created_at DESC",
             (category_id,)
         )
     else:
@@ -443,8 +444,8 @@ def dashboard():
             posts = query_db("SELECT * FROM posts ORDER BY created_at DESC")
         else:
             posts = query_db(
-                "SELECT * FROM posts WHERE category_id != ? ORDER BY created_at DESC",
-                (REPORTED_CATEGORY_ID,)
+                "SELECT * FROM posts WHERE category_id != %s ORDER BY created_at DESC",
+                (get_reported_category_id(),)
             )
 
     posts = [dict(p) for p in posts]
@@ -455,7 +456,7 @@ def dashboard():
             """
             SELECT COUNT(*) AS c
             FROM comments
-            WHERE post_id = ?
+            WHERE post_id = %s
             AND created_at > datetime('now', '-1 day')
             """,
             (post['post_id'],),
@@ -509,7 +510,7 @@ def report_comment(comment_id):
 
     # Move parent post into moderation category
     post = query_db(
-        "SELECT post_id FROM comments WHERE comment_id = ?",
+        "SELECT post_id FROM comments WHERE comment_id = %s",
         (comment_id,),
         one=True
     )
@@ -547,7 +548,7 @@ def unreport_post(post_id):
 
     # Move post back to a normal category (default: General)
     db.execute(
-        "UPDATE posts SET reported = 0, category_id = 1 WHERE post_id = ?",
+        "UPDATE posts SET reported = 0, category_id = 1 WHERE post_id = %s",
         (post_id,)
     )
 
@@ -561,7 +562,7 @@ def delete_comment(comment_id):
         return "Unauthorized", 403
 
     db = get_db()
-    db.execute("DELETE FROM comments WHERE comment_id = ?", (comment_id,))
+    db.execute("DELETE FROM comments WHERE comment_id = %s", (comment_id,))
     db.commit()
 
     return redirect(request.referrer)
@@ -574,7 +575,7 @@ def unreport_comment(comment_id):
 
     db = get_db()
     db.execute(
-        "UPDATE comments SET reported = 0 WHERE comment_id = ?",
+        "UPDATE comments SET reported = 0 WHERE comment_id = %s",
         (comment_id,)
     )
     db.commit()
