@@ -198,14 +198,16 @@ def check_registration(username, email):
 def register_user(username, email, password):
     db = get_db()
     hashed_password = pbkdf2_sha512.hash(password)
+    curr = db.cursor()
 
-    db.execute(
+    curr.execute(
         """
         INSERT INTO users (username, email, password_hash)
         VALUES (%s, %s, %s)
         """,
         (username, email, hashed_password)
     )
+    curr.close()
     db.commit()
 
 # 4. get_categories
@@ -220,8 +222,9 @@ def create_a_post(user_id, category_id, title, body,
                 attachment_name=None, attachment_blob=None, attachment_type=None):
 
     db = get_db()
+    curr = db.cursor()
 
-    cursor = db.execute(
+    cursor = curr.execute(
         """
         INSERT INTO posts (user_id, category_id, title, body,
                            attachment_name, attachment_blob, attachment_type)
@@ -230,7 +233,7 @@ def create_a_post(user_id, category_id, title, body,
         (user_id, category_id, title, body,
          attachment_name, attachment_blob, attachment_type)
     )
-
+    cursor.close()
     db.commit()
     
     return cursor
@@ -249,10 +252,12 @@ def get_post(post_id):
 
 def delete_post(post_id):
     db = get_db()
+    curr = db.cursor()
 
-    db.execute("DELETE FROM comments WHERE post_id = %s", (post_id,))
-    db.execute("DELETE FROM posts WHERE post_id = %s", (post_id,))
+    curr.execute("DELETE FROM comments WHERE post_id = %s", (post_id,))
+    curr.execute("DELETE FROM posts WHERE post_id = %s", (post_id,))
 
+    curr.close()
     db.commit()
 
 
@@ -262,14 +267,16 @@ def delete_post(post_id):
 def add_a_comment(post_id, user_id, body, anon_name, line_number=None):
     db = get_db()
 
-    db.execute(
+    curr = db.cursor()
+
+    curr.execute(
         """
         INSERT INTO comments (post_id, user_id, body, anon_name, line_number)
         VALUES (%s, %s, %s, %s, %s)
         """,
         (post_id, user_id, body, anon_name, line_number)
     )
-
+    curr.close()
     db.commit()
 
 # 9. get_comments
@@ -310,7 +317,8 @@ def vote_a_comment(user_id, comment_id, vote_type):
     if existing:
         return False
 
-    db.execute(
+    curr = db.cursor()
+    curr.execute(
         """
         INSERT INTO comment_votes (user_id, comment_id, vote_type)
         VALUES (%s, %s, %s)
@@ -319,16 +327,16 @@ def vote_a_comment(user_id, comment_id, vote_type):
     )
 
     if vote_type == "up":
-        db.execute(
+        curr.execute(
             "UPDATE comments SET upvotes = upvotes + 1 WHERE comment_id = %s",
             (comment_id,)
         )
     else:
-        db.execute(
+        curr.execute(
             "UPDATE comments SET downvotes = downvotes + 1 WHERE comment_id = %s",
             (comment_id,)
         )
-
+    curr.close()
     db.commit()
     return True
 
@@ -338,8 +346,9 @@ def vote_a_comment(user_id, comment_id, vote_type):
 
 def flag_item(user_id, post_id, comment_id=None, reason=None):
     db = get_db()
+    curr = db.cursor()
 
-    db.execute(
+    curr.execute(
         """
         INSERT INTO reports (user_id, post_id, comment_id, reason)
         VALUES (%s, %s, %s, %s)
@@ -349,11 +358,12 @@ def flag_item(user_id, post_id, comment_id=None, reason=None):
 
     # Every comment is related to a post ID, this should allow us to report posts and comments
     if comment_id:
-        db.execute("UPDATE comments SET reported = 1 WHERE comment_id = %s", (comment_id,))
+        curr.execute("UPDATE comments SET reported = 1 WHERE comment_id = %s", (comment_id,))
     
     if post_id:
-        db.execute("UPDATE posts SET reported = 1 WHERE post_id = %s", (post_id,))
+        curr.execute("UPDATE posts SET reported = 1 WHERE post_id = %s", (post_id,))
 
+    curr.close()
     db.commit()
 
 
@@ -361,13 +371,16 @@ def flag_item(user_id, post_id, comment_id=None, reason=None):
 def add_request(user_id, new_role):
     db = get_db()
 
-    db.execute(
+    curr = db.cursor()
+
+    curr.execute(
         """
         INSERT INTO role_update (user_id, new_role)
         VALUES (%s, %s)
         """,
         (user_id, new_role)
     )
+    curr.close()
     db.commit()
 
 
@@ -410,7 +423,8 @@ def approve_new_role(new_role, username, request_id):
     db = get_db()
 
     #set new role for user
-    db.execute(
+    curr = db.cursor()
+    curr.execute(
         """
         UPDATE users SET role = %s WHERE username = %s
         """,
@@ -418,12 +432,13 @@ def approve_new_role(new_role, username, request_id):
     )
 
     #mark decision as complete
-    db.execute(
+    curr.execute(
         """
         UPDATE role_update SET decision_complete = %s WHERE request_id = %s
         """,
         (1, request_id)
     )
+    curr.close()
     db.commit()
 
 
@@ -432,12 +447,14 @@ def reject_new_role(request_id):
     db = get_db()
 
     #mark decision as complete
-    db.execute(
+    curr = db.cursor()
+    curr.execute(
         """
         UPDATE role_update SET decision_complete = %s WHERE request_id = %s
         """,
         (1, request_id)
     )
+    curr.close()
     db.commit()
     
 

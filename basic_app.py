@@ -62,12 +62,13 @@ def close_connection(exception):
 
 def init_categories():
     db = get_db()
-
-    db.execute("INSERT INTO categories (name) VALUES (%s)", ("Homework",))
-    db.execute("INSERT INTO categories (name) VALUES (%s)", ("Project",))
-    db.execute("INSERT INTO categories (name) VALUES (%s)", ("Exam Prep",))
-    db.execute("INSERT INTO categories (name) VALUES (%s)", ("General",))
-    db.execute("INSERT INTO categories (name) VALUES (%s)", ("Code Review",))
+    curr = db.cursor()
+    curr.execute("INSERT INTO categories (name) VALUES (%s)", ("Homework",))
+    curr.execute("INSERT INTO categories (name) VALUES (%s)", ("Project",))
+    curr.execute("INSERT INTO categories (name) VALUES (%s)", ("Exam Prep",))
+    curr.execute("INSERT INTO categories (name) VALUES (%s)", ("General",))
+    curr.execute("INSERT INTO categories (name) VALUES (%s)", ("Code Review",))
+    curr.close()
 
     db.commit()
 
@@ -333,11 +334,13 @@ def create_post():
         pseudonym = anon_name(1, post_id)
 
         db = get_db()
-        db.execute(
+        curr = db.cursor()
+        curr.execute(
             "UPDATE posts SET anon_name = %s WHERE post_id = %s",
             (pseudonym, post_id)
         )
         db.commit()
+        curr.close()
 
         return redirect(url_for('view_post', post_id=post_id))
 
@@ -527,7 +530,8 @@ def view_reports():
         return "Unauthorized", 403
 
     db = get_db()
-    reports = db.execute("""
+    curr = db.cursor()
+    reports = curr.execute("""
         SELECT r.*, u.username, p.title AS post_title, c.body AS comment_body
         FROM reports r
         LEFT JOIN users u ON r.user_id = u.user_id
@@ -535,6 +539,7 @@ def view_reports():
         LEFT JOIN comments c ON r.comment_id = c.comment_id
         ORDER BY r.created_at DESC
     """).fetchall()
+    curr.close()
 
     return render_template('admin_reports.html', reports=reports)
 
@@ -545,13 +550,14 @@ def unreport_post(post_id):
         return "Unauthorized", 403
 
     db = get_db()
+    curr = db.cursor()
 
     # Move post back to a normal category (default: General)
-    db.execute(
+    curr.execute(
         "UPDATE posts SET reported = 0, category_id = 1 WHERE post_id = %s",
         (post_id,)
     )
-
+    curr.close()
     db.commit()
     return redirect(request.referrer)
 
@@ -562,8 +568,10 @@ def delete_comment(comment_id):
         return "Unauthorized", 403
 
     db = get_db()
-    db.execute("DELETE FROM comments WHERE comment_id = %s", (comment_id,))
+    curr = db.cursor()
+    curr.execute("DELETE FROM comments WHERE comment_id = %s", (comment_id,))
     db.commit()
+    curr.close()
 
     return redirect(request.referrer)
 
@@ -574,11 +582,13 @@ def unreport_comment(comment_id):
         return "Unauthorized", 403
 
     db = get_db()
-    db.execute(
+    curr = db.cursor()
+    curr.execute(
         "UPDATE comments SET reported = 0 WHERE comment_id = %s",
         (comment_id,)
     )
     db.commit()
+    curr.close()
 
     return redirect(request.referrer)
 
