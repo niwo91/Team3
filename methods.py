@@ -144,7 +144,7 @@ def query_db(query, args=(), one=False):
     '''
     Used to query DB
     @param query The sqlite3 query for the database
-    @param args A list of arguments to be used in query - replaces ? in query
+    @param args A list of arguments to be used in query - replaces %s in query
     @param one Bool for returning one value or not
     @return list with query result
     '''
@@ -160,7 +160,7 @@ def query_db(query, args=(), one=False):
 
 def check_user(username, password):
     user = query_db(
-        "SELECT * FROM users WHERE username = ?",
+        "SELECT * FROM users WHERE username = %s",
         (username,),
         one=True
     )
@@ -179,13 +179,13 @@ def check_user(username, password):
 
 def check_registration(username, email):
     existing_username = query_db(
-        "SELECT 1 FROM users WHERE username = ?",
+        "SELECT 1 FROM users WHERE username = %s",
         (username,),
         one=True
     )
 
     existing_email = query_db(
-        "SELECT 1 FROM users WHERE email = ?",
+        "SELECT 1 FROM users WHERE email = %s",
         (email,),
         one=True
     )
@@ -202,7 +202,7 @@ def register_user(username, email, password):
     db.execute(
         """
         INSERT INTO users (username, email, password_hash)
-        VALUES (?, ?, ?)
+        VALUES (%s, %s, %s)
         """,
         (username, email, hashed_password)
     )
@@ -225,7 +225,7 @@ def create_a_post(user_id, category_id, title, body,
         """
         INSERT INTO posts (user_id, category_id, title, body,
                            attachment_name, attachment_blob, attachment_type)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
         """,
         (user_id, category_id, title, body,
          attachment_name, attachment_blob, attachment_type)
@@ -240,7 +240,7 @@ def create_a_post(user_id, category_id, title, body,
 
 def get_post(post_id):
     return query_db(
-        "SELECT * FROM posts WHERE post_id = ?",
+        "SELECT * FROM posts WHERE post_id = %s",
         (post_id,),
         one=True
     )
@@ -250,8 +250,8 @@ def get_post(post_id):
 def delete_post(post_id):
     db = get_db()
 
-    db.execute("DELETE FROM comments WHERE post_id = ?", (post_id,))
-    db.execute("DELETE FROM posts WHERE post_id = ?", (post_id,))
+    db.execute("DELETE FROM comments WHERE post_id = %s", (post_id,))
+    db.execute("DELETE FROM posts WHERE post_id = %s", (post_id,))
 
     db.commit()
 
@@ -265,7 +265,7 @@ def add_a_comment(post_id, user_id, body, anon_name, line_number=None):
     db.execute(
         """
         INSERT INTO comments (post_id, user_id, body, anon_name, line_number)
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s)
         """,
         (post_id, user_id, body, anon_name, line_number)
     )
@@ -280,7 +280,7 @@ def get_comments(post_id):
         """
         SELECT comment_id, body, anon_name, line_number, upvotes, downvotes
         FROM comments
-        WHERE post_id = ?
+        WHERE post_id = %s
         ORDER BY created_at ASC
         """,
         (post_id,)
@@ -291,7 +291,7 @@ def get_comments(post_id):
 
 def get_votes(comment_id):
     return query_db(
-        "SELECT * FROM comment_votes WHERE comment_id = ?",
+        "SELECT * FROM comment_votes WHERE comment_id = %s",
         (comment_id,)
     )
 
@@ -302,7 +302,7 @@ def vote_a_comment(user_id, comment_id, vote_type):
     db = get_db()
 
     existing = query_db(
-        "SELECT * FROM comment_votes WHERE user_id = ? AND comment_id = ?",
+        "SELECT * FROM comment_votes WHERE user_id = %s AND comment_id = %s",
         (user_id, comment_id),
         one=True
     )
@@ -313,19 +313,19 @@ def vote_a_comment(user_id, comment_id, vote_type):
     db.execute(
         """
         INSERT INTO comment_votes (user_id, comment_id, vote_type)
-        VALUES (?, ?, ?)
+        VALUES (%s, %s, %s)
         """,
         (user_id, comment_id, vote_type)
     )
 
     if vote_type == "up":
         db.execute(
-            "UPDATE comments SET upvotes = upvotes + 1 WHERE comment_id = ?",
+            "UPDATE comments SET upvotes = upvotes + 1 WHERE comment_id = %s",
             (comment_id,)
         )
     else:
         db.execute(
-            "UPDATE comments SET downvotes = downvotes + 1 WHERE comment_id = ?",
+            "UPDATE comments SET downvotes = downvotes + 1 WHERE comment_id = %s",
             (comment_id,)
         )
 
@@ -342,17 +342,17 @@ def flag_item(user_id, post_id, comment_id=None, reason=None):
     db.execute(
         """
         INSERT INTO reports (user_id, post_id, comment_id, reason)
-        VALUES (?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s)
         """,
         (user_id, post_id, comment_id, reason)
     )
 
     # Every comment is related to a post ID, this should allow us to report posts and comments
     if comment_id:
-        db.execute("UPDATE comments SET reported = 1 WHERE comment_id = ?", (comment_id,))
+        db.execute("UPDATE comments SET reported = 1 WHERE comment_id = %s", (comment_id,))
     
     if post_id:
-        db.execute("UPDATE posts SET reported = 1 WHERE post_id = ?", (post_id,))
+        db.execute("UPDATE posts SET reported = 1 WHERE post_id = %s", (post_id,))
 
     db.commit()
 
@@ -364,7 +364,7 @@ def add_request(user_id, new_role):
     db.execute(
         """
         INSERT INTO role_update (user_id, new_role)
-        VALUES (?, ?)
+        VALUES (%s, %s)
         """,
         (user_id, new_role)
     )
@@ -396,7 +396,7 @@ def check_decision(request_id):
     decision_complete = query_db(
         """
         SELECT decision_complete FROM role_update
-        WHERE request_id = ?
+        WHERE request_id = %s
         """,
         (request_id, )
     )
@@ -412,7 +412,7 @@ def approve_new_role(new_role, username, request_id):
     #set new role for user
     db.execute(
         """
-        UPDATE users SET role = ? WHERE username = ?
+        UPDATE users SET role = %s WHERE username = %s
         """,
         (new_role, username)
     )
@@ -420,7 +420,7 @@ def approve_new_role(new_role, username, request_id):
     #mark decision as complete
     db.execute(
         """
-        UPDATE role_update SET decision_complete = ? WHERE request_id = ?
+        UPDATE role_update SET decision_complete = %s WHERE request_id = %s
         """,
         (1, request_id)
     )
@@ -434,7 +434,7 @@ def reject_new_role(request_id):
     #mark decision as complete
     db.execute(
         """
-        UPDATE role_update SET decision_complete = ? WHERE request_id = ?
+        UPDATE role_update SET decision_complete = %s WHERE request_id = %s
         """,
         (1, request_id)
     )
