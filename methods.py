@@ -15,32 +15,124 @@ def init_db():
     db = get_db()
     cur = db.cursor()
 
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        user_id SERIAL PRIMARY KEY,
-        username TEXT,
-        email TEXT,
-        password TEXT,
-        role TEXT,
-        active BOOLEAN
-    );
-    """)
+    # Drop tables (order matters)
+    cur.execute("DROP TABLE IF EXISTS role_update CASCADE;")
+    cur.execute("DROP TABLE IF EXISTS reports CASCADE;")
+    cur.execute("DROP TABLE IF EXISTS comment_votes CASCADE;")
+    cur.execute("DROP TABLE IF EXISTS comments CASCADE;")
+    cur.execute("DROP TABLE IF EXISTS posts CASCADE;")
+    cur.execute("DROP TABLE IF EXISTS categories CASCADE;")
+    cur.execute("DROP TABLE IF EXISTS users CASCADE;")
 
+    # Users
     cur.execute("""
-    CREATE TABLE IF NOT EXISTS posts (
-        post_id SERIAL PRIMARY KEY,
-        user_id INTEGER,
-        title TEXT,
-        body TEXT,
-        attachment_name TEXT,
-        attachment_blob BYTEA,
-        attachment_type TEXT,
+    CREATE TABLE users (
+        user_id SERIAL PRIMARY KEY,
+        username TEXT UNIQUE NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        role TEXT CHECK(role IN ('student','teacher','admin','moderator')) DEFAULT 'student',
+        is_active BOOLEAN DEFAULT TRUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     """)
 
-    db.commit()
+    # Categories
+    cur.execute("""
+    CREATE TABLE categories (
+        category_id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT
+    );
+    """)
 
+    # Posts
+    cur.execute("""
+    CREATE TABLE posts (
+        post_id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        category_id INTEGER,
+        title TEXT NOT NULL,
+        body TEXT NOT NULL,
+        attachment_name TEXT,
+        attachment_blob BYTEA,
+        attachment_type TEXT,
+        anon_name TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        reported BOOLEAN DEFAULT FALSE,
+        FOREIGN KEY (user_id) REFERENCES users(user_id),
+        FOREIGN KEY (category_id) REFERENCES categories(category_id)
+    );
+    """)
+
+    # Comments
+    cur.execute("""
+    CREATE TABLE comments (
+        comment_id SERIAL PRIMARY KEY,
+        post_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        anon_name TEXT,
+        body TEXT NOT NULL,
+        comment_anchor TEXT,
+        line_number INTEGER,
+        upvotes INTEGER DEFAULT 0,
+        downvotes INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        reported BOOLEAN DEFAULT FALSE,
+        FOREIGN KEY (post_id) REFERENCES posts(post_id),
+        FOREIGN KEY (user_id) REFERENCES users(user_id)
+    );
+    """)
+
+    # Comment votes
+    cur.execute("""
+    CREATE TABLE comment_votes (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER,
+        comment_id INTEGER,
+        vote_type TEXT,
+        UNIQUE(user_id, comment_id),
+        FOREIGN KEY (comment_id) REFERENCES comments(comment_id),
+        FOREIGN KEY (user_id) REFERENCES users(user_id)
+    );
+    """)
+
+    # Reports
+    cur.execute("""
+    CREATE TABLE reports (
+        report_id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        post_id INTEGER NOT NULL,
+        comment_id INTEGER,
+        reason TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(user_id),
+        FOREIGN KEY (post_id) REFERENCES posts(post_id),
+        FOREIGN KEY (comment_id) REFERENCES comments(comment_id)
+    );
+    """)
+
+    # Role update
+    cur.execute("""
+    CREATE TABLE role_update (
+        request_id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        new_role TEXT CHECK(new_role IN ('teacher','moderator')),
+        decision_complete BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(user_id)
+    );
+    """)
+
+    # Seed required category 
+    cur.execute("""
+    INSERT INTO categories (name, description)
+    VALUES ('Reported Items', 'Auto-generated moderation category')
+    ON CONFLICT DO NOTHING;
+    """)
+
+    db.commit()
 def get_db():
     if 'db' not in g:
         DATABASE_URL = os.environ.get("DATABASE_URL")
