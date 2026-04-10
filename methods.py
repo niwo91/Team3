@@ -10,6 +10,23 @@ import os
 from Constants import *
 
 # DB Helpers 
+def seed_users(cur):
+    users = [
+        ("test_student", "test1@student.com", "TestPass01", "student"),
+        ("test_student2", "test2@student.com", "TestPass02", "student"),
+        ("test_teacher", "teacher1@teacher.com", "TestTeach01", "teacher"),
+        ("test_admin", "admin1@admin.com", "TestAdmin01", "admin"),
+        ("test_mod", "mod1@mod.com", "TestModerator01", "moderator"),
+    ]
+
+    for username, email, password, role in users:
+        hashed = pbkdf2_sha512.hash(password)
+
+        cur.execute("""
+        INSERT INTO users (username, email, password_hash, role)
+        VALUES (%s, %s, %s, %s)
+        ON CONFLICT (username) DO NOTHING;
+        """, (username, email, hashed, role))
 
 def init_db():
     db = get_db()
@@ -129,7 +146,7 @@ def init_db():
         ('Code Review'),
         ('Reported Items');
         """)
-
+    seed_users(cur)
     db.commit()
     cur.close()
 def get_db():
