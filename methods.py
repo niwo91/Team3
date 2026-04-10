@@ -117,21 +117,18 @@ def init_db():
     """)
 
     # Seed categories (including required one), but only if table is empty to avoid duplicates on multiple runs
-    existing_categories = query_db("SELECT 1 FROM categories LIMIT 1", one=True)
-    if existing_categories:
-        db.commit()
-        cur.close()
-        return
-
-    cur.execute("""
-    INSERT INTO categories (name) VALUES
-    ('Homework'),
-    ('Project'),
-    ('Exam Prep'),
-    ('General'),
-    ('Code Review'),
-    ('Reported Items');
-    """)
+    cur.execute("SELECT 1 FROM categories LIMIT 1")
+    existing = cur.fetchone()
+    if not existing:
+        cur.execute("""
+        INSERT INTO categories (name) VALUES
+        ('Homework'),
+        ('Project'),
+        ('Exam Prep'),
+        ('General'),
+        ('Code Review'),
+        ('Reported Items');
+        """)
 
     db.commit()
     cur.close()
