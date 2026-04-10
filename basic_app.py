@@ -512,8 +512,15 @@ def report_comment(comment_id):
         (comment_id,),
         one=True
     )
+    if post == None:
+        return "Comment not found", 404
 
-    flag_item(user_id, post["post_id"], comment_id, reason)
+    flag_item(
+            user_id=user_id,
+            post_id=post["post_id"],
+            comment_id=comment_id,
+            reason=reason
+        )
 
     return redirect(request.referrer)
 
