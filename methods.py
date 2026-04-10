@@ -367,6 +367,15 @@ def flag_item(user_id, post_id, comment_id=None, reason=None):
     curr = db.cursor()
 
     try:
+        # Get Reported Items category ID FIRST
+        row = query_db(
+            "SELECT category_id FROM categories WHERE name = %s",
+            ("Reported Items",),
+            one=True
+        )
+        reported_category_id = row["category_id"] if row else None
+
+        # Insert report
         curr.execute(
             """
             INSERT INTO reports (user_id, post_id, comment_id, reason)
@@ -375,11 +384,21 @@ def flag_item(user_id, post_id, comment_id=None, reason=None):
             (user_id, post_id, comment_id, reason)
         )
 
+        # Mark comment as reported
         if comment_id is not None:
-            curr.execute("UPDATE comments SET reported = TRUE WHERE comment_id = %s", (comment_id,))
-        
-        if post_id is not None:
-            curr.execute("UPDATE posts SET reported = TRUE WHERE post_id = %s", (post_id,))
+            curr.execute(
+                "UPDATE comments SET reported = TRUE WHERE comment_id = %s",
+                (comment_id,)
+            )
+
+        # Move post to Reported Items + mark reported
+        if post_id is not None and reported_category_id is not None:
+            curr.execute("""
+                UPDATE posts
+                SET reported = TRUE,
+                    category_id = %s
+                WHERE post_id = %s
+            """, (reported_category_id, post_id))
 
         db.commit()
 
