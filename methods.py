@@ -15,18 +15,9 @@ def init_db():
     db = get_db()
     cur = db.cursor()
 
-    # Drop tables (in correct order due to foreign keys)
-    cur.execute("DROP TABLE IF EXISTS role_update CASCADE;")
-    cur.execute("DROP TABLE IF EXISTS reports CASCADE;")
-    cur.execute("DROP TABLE IF EXISTS comment_votes CASCADE;")
-    cur.execute("DROP TABLE IF EXISTS comments CASCADE;")
-    cur.execute("DROP TABLE IF EXISTS posts CASCADE;")
-    cur.execute("DROP TABLE IF EXISTS categories CASCADE;")
-    cur.execute("DROP TABLE IF EXISTS users CASCADE;")
-
     # Users table
     cur.execute("""
-    CREATE TABLE users (
+    CREATE TABLE IF NOT EXISTS users (
         user_id SERIAL PRIMARY KEY,
         username TEXT UNIQUE NOT NULL,
         email TEXT UNIQUE NOT NULL,
@@ -39,7 +30,7 @@ def init_db():
 
     # Categories table
     cur.execute("""
-    CREATE TABLE categories (
+    CREATE TABLE IF NOT EXISTS categories (
         category_id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         description TEXT
@@ -48,7 +39,7 @@ def init_db():
 
     # Posts table
     cur.execute("""
-    CREATE TABLE posts (
+    CREATE TABLE IF NOT EXISTS posts (
         post_id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL,
         category_id INTEGER,
@@ -68,7 +59,7 @@ def init_db():
 
     # Comments table
     cur.execute("""
-    CREATE TABLE comments (
+    CREATE TABLE IF NOT EXISTS comments (
         comment_id SERIAL PRIMARY KEY,
         post_id INTEGER NOT NULL,
         user_id INTEGER NOT NULL,
@@ -87,7 +78,7 @@ def init_db():
 
     # Comment votes table
     cur.execute("""
-    CREATE TABLE comment_votes (
+    CREATE TABLE IF NOT EXISTS comment_votes (
         id SERIAL PRIMARY KEY,
         user_id INTEGER,
         comment_id INTEGER,
@@ -100,7 +91,7 @@ def init_db():
 
     # Reports table
     cur.execute("""
-    CREATE TABLE reports (
+    CREATE TABLE IF NOT EXISTS reports (
         report_id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL,
         post_id INTEGER NOT NULL,
@@ -115,7 +106,7 @@ def init_db():
 
     # Role update table
     cur.execute("""
-    CREATE TABLE role_update (
+    CREATE TABLE IF NOT EXISTS role_update (
         request_id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL,
         new_role TEXT CHECK(new_role IN ('teacher','moderator')),
@@ -125,7 +116,13 @@ def init_db():
     );
     """)
 
-    # Seed categories (including required one)
+    # Seed categories (including required one), but only if table is empty to avoid duplicates on multiple runs
+    existing_categories = query_db("SELECT 1 FROM categories LIMIT 1", one=True)
+    if existing_categories:
+        db.commit()
+        cur.close()
+        return
+
     cur.execute("""
     INSERT INTO categories (name) VALUES
     ('Homework'),
