@@ -493,7 +493,15 @@ def report_post(post_id):
     reason = request.form.get('reason', 'No reason provided')
     user_id = session['user_id']
 
-    flag_item(user_id, post_id, reason=reason, comment_id=None)
+    if post_id is None:
+        return "Post ID is required", 400
+
+    flag_item(
+            user_id=user_id,
+            post_id=post_id,
+            comment_id=None,
+            reason=reason
+        )
 
     return redirect(url_for('view_post', post_id=post_id))
 
