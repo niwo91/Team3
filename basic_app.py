@@ -2,7 +2,6 @@
 # Team 3: HomeworkBusters
 import os
 import psycopg2
-import os
 from dotenv import load_dotenv
 import time
 
@@ -15,6 +14,7 @@ from werkzeug.utils import secure_filename
 from Constants import *
 from anonymizer import anon_name
 from methods import *
+from methods import delete_post as delete_post_db
 
 import docx
 from bs4 import BeautifulSoup
@@ -56,23 +56,10 @@ def close_connection(exception):
     '''
     Closes connection to db
     '''
-    db = getattr(g, '_database', None)
+    db = g.pop('db', None)
     if db is not None:
         db.close()
 
-def init_categories():
-    db = get_db()
-    curr = db.cursor()
-    curr.execute("INSERT INTO categories (name) VALUES (%s)", ("Homework",))
-    curr.execute("INSERT INTO categories (name) VALUES (%s)", ("Project",))
-    curr.execute("INSERT INTO categories (name) VALUES (%s)", ("Exam Prep",))
-    curr.execute("INSERT INTO categories (name) VALUES (%s)", ("General",))
-    curr.execute("INSERT INTO categories (name) VALUES (%s)", ("Code Review",))
-    curr.close()
-
-    db.commit()
-
-    return "Categories initialized!" 
 
 def blobify(file):
     """
@@ -158,8 +145,13 @@ def load_user(user_id):
 
     if user_row == None:
         return None
-    
-    user = User(user_row[0], user_row[1], user_row[4], user_row[5])
+
+    user = User(
+    user_row["user_id"],
+    user_row["username"],
+    user_row["role"],
+    user_row["is_active"]   
+    )   
     return user
 
 
@@ -198,7 +190,13 @@ def login():
 
         #if credentials are valid and user is active, log in
         else:
-            user_obj = User(user_row[0], user_row[1], user_row[2], user_active) #create User object
+            #create User object
+            user_obj = User(
+                user_row["user_id"],
+                user_row["username"],
+                user_row["role"],
+                user_active
+            )
             login_user(user_obj)
             session["user_id"] = user_row[0]
             session["role"] = user_row[2] 
@@ -284,7 +282,7 @@ def delete_post(post_id):
     if not (is_owner or is_admin or is_mod):
         return "Forbidden", 403
 
-    delete_post(post_id)
+    delete_post_db(post_id)
 
     return redirect(url_for('dashboard'))
 
@@ -301,8 +299,6 @@ def create_post():
         )
 
     # If categories table is empty, initialize it
-    if not categories:
-        init_categories()
 
     # --- HANDLE POST REQUEST ---
     if request.method == 'POST':
@@ -327,9 +323,7 @@ def create_post():
             attachment_blob = blobify(attachment)
             attachment_type = filename.split('.')[-1]
 
-        cursor = create_a_post(user_id, category_id, title, body, filename, attachment_blob, attachment_type)
-
-        post_id = cursor.lastrowid
+        post_id = create_a_post(user_id, category_id, title, body, filename, attachment_blob, attachment_type)
 
         pseudonym = anon_name(1, post_id)
 
@@ -426,7 +420,7 @@ def dashboard():
             SELECT COUNT(*) AS c
             FROM posts
             WHERE category_id = %s
-            AND created_at > datetime('now', '-1 day')
+            AND created_at > NOW() - INTERVAL '1 day'
             """,
             (cat['category_id'],),
             one=True
@@ -460,7 +454,7 @@ def dashboard():
             SELECT COUNT(*) AS c
             FROM comments
             WHERE post_id = %s
-            AND created_at > datetime('now', '-1 day')
+            AND created_at > NOW() - INTERVAL '1 day'
             """,
             (post['post_id'],),
             one=True
@@ -508,6 +502,7 @@ def report_post(post_id):
 def report_comment(comment_id):
     reason = request.form.get('reason', 'No reason provided')
     user_id = session['user_id']
+    
 
     db = get_db()
 
@@ -518,7 +513,7 @@ def report_comment(comment_id):
         one=True
     )
 
-    flag_item(user_id, post[0], comment_id, reason)
+    flag_item(user_id, post["post_id"], comment_id, reason)
 
     return redirect(request.referrer)
 
@@ -531,14 +526,15 @@ def view_reports():
 
     db = get_db()
     curr = db.cursor()
-    reports = curr.execute("""
+    curr.execute("""
         SELECT r.*, u.username, p.title AS post_title, c.body AS comment_body
         FROM reports r
         LEFT JOIN users u ON r.user_id = u.user_id
         LEFT JOIN posts p ON r.post_id = p.post_id
         LEFT JOIN comments c ON r.comment_id = c.comment_id
         ORDER BY r.created_at DESC
-    """).fetchall()
+    """)
+    reports = curr.fetchall()
     curr.close()
 
     return render_template('admin_reports.html', reports=reports)

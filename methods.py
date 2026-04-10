@@ -15,7 +15,7 @@ def init_db():
     db = get_db()
     cur = db.cursor()
 
-    # Drop tables (order matters)
+    # Drop tables (in correct order due to foreign keys)
     cur.execute("DROP TABLE IF EXISTS role_update CASCADE;")
     cur.execute("DROP TABLE IF EXISTS reports CASCADE;")
     cur.execute("DROP TABLE IF EXISTS comment_votes CASCADE;")
@@ -24,7 +24,7 @@ def init_db():
     cur.execute("DROP TABLE IF EXISTS categories CASCADE;")
     cur.execute("DROP TABLE IF EXISTS users CASCADE;")
 
-    # Users
+    # Users table
     cur.execute("""
     CREATE TABLE users (
         user_id SERIAL PRIMARY KEY,
@@ -37,7 +37,7 @@ def init_db():
     );
     """)
 
-    # Categories
+    # Categories table
     cur.execute("""
     CREATE TABLE categories (
         category_id SERIAL PRIMARY KEY,
@@ -46,7 +46,7 @@ def init_db():
     );
     """)
 
-    # Posts
+    # Posts table
     cur.execute("""
     CREATE TABLE posts (
         post_id SERIAL PRIMARY KEY,
@@ -66,7 +66,7 @@ def init_db():
     );
     """)
 
-    # Comments
+    # Comments table
     cur.execute("""
     CREATE TABLE comments (
         comment_id SERIAL PRIMARY KEY,
@@ -85,7 +85,7 @@ def init_db():
     );
     """)
 
-    # Comment votes
+    # Comment votes table
     cur.execute("""
     CREATE TABLE comment_votes (
         id SERIAL PRIMARY KEY,
@@ -98,7 +98,7 @@ def init_db():
     );
     """)
 
-    # Reports
+    # Reports table
     cur.execute("""
     CREATE TABLE reports (
         report_id SERIAL PRIMARY KEY,
@@ -113,7 +113,7 @@ def init_db():
     );
     """)
 
-    # Role update
+    # Role update table
     cur.execute("""
     CREATE TABLE role_update (
         request_id SERIAL PRIMARY KEY,
@@ -125,14 +125,19 @@ def init_db():
     );
     """)
 
-    # Seed required category 
+    # Seed categories (including required one)
     cur.execute("""
-    INSERT INTO categories (name, description)
-    VALUES ('Reported Items', 'Auto-generated moderation category')
-    ON CONFLICT DO NOTHING;
+    INSERT INTO categories (name) VALUES
+    ('Homework'),
+    ('Project'),
+    ('Exam Prep'),
+    ('General'),
+    ('Code Review'),
+    ('Reported Items');
     """)
 
     db.commit()
+    cur.close()
 def get_db():
     if 'db' not in g:
         DATABASE_URL = os.environ.get("DATABASE_URL")
@@ -169,7 +174,7 @@ def check_user(username, password):
         return None, False, False
 
     valid_password = pbkdf2_sha512.verify(password, user["password_hash"])
-    is_active = user["is_active"] == 1
+    is_active = user["is_active"]
 
     return [user["user_id"], user["username"], user["role"]], valid_password, is_active
 
@@ -224,19 +229,21 @@ def create_a_post(user_id, category_id, title, body,
     db = get_db()
     curr = db.cursor()
 
-    cursor = curr.execute(
+    curr.execute(
         """
         INSERT INTO posts (user_id, category_id, title, body,
                            attachment_name, attachment_blob, attachment_type)
         VALUES (%s, %s, %s, %s, %s, %s, %s)
+        RETURNING post_id
         """,
         (user_id, category_id, title, body,
          attachment_name, attachment_blob, attachment_type)
     )
-    cursor.close()
+    post_id = curr.fetchone()[0]
+    curr.close()
     db.commit()
     
-    return cursor
+    return post_id
 
 # 6. get_post
 
@@ -414,7 +421,7 @@ def check_decision(request_id):
         (request_id, )
     )
 
-    return decision_complete
+    return decision_complete["decision_complete"] if decision_complete else False
 
 
 
