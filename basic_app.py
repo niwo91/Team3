@@ -176,10 +176,10 @@ def login():
 
     #handles form validation, makes sure request is POST
     if form.validate_on_submit():
-        user_data = check_user(form.user_name.data, form.password.data)
-        user_row = user_data[0]
-        valid_credentials = (user_row != None and user_data[1] == True)
-        user_active = user_data[2]
+        user_data, valid_password, is_active = check_user(form.user_name.data, form.password.data)
+
+        valid_credentials = (user_data != None and valid_password == True)
+        user_active = is_active
 
         if valid_credentials == False:
             return render_template('login.html', form=form, invalid_login=True)
@@ -192,14 +192,14 @@ def login():
         else:
             #create User object
             user_obj = User(
-                user_row["user_id"],
-                user_row["username"],
-                user_row["role"],
+                user_data["user_id"],
+                user_data["username"],
+                user_data["role"],
                 user_active
             )
             login_user(user_obj)
-            session["user_id"] = user_row[0]
-            session["role"] = user_row[2] 
+            session["user_id"] = user_data["user_id"]
+            session["role"] = user_data["role"]
             session.permanent = True #session is permanent so that config can handle timeouts
             return redirect("/dashboard")
 

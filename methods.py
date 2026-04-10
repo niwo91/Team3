@@ -176,7 +176,7 @@ def check_user(username, password):
     valid_password = pbkdf2_sha512.verify(password, user["password_hash"])
     is_active = user["is_active"]
 
-    return [user["user_id"], user["username"], user["role"]], valid_password, is_active
+    return user, valid_password, is_active
 
 
 # 2. check_registration
