@@ -355,23 +355,30 @@ def flag_item(user_id, post_id, comment_id=None, reason=None):
     db = get_db()
     curr = db.cursor()
 
-    curr.execute(
-        """
-        INSERT INTO reports (user_id, post_id, comment_id, reason)
-        VALUES (%s, %s, %s, %s)
-        """,
-        (user_id, post_id, comment_id, reason)
-    )
+    try:
+        curr.execute(
+            """
+            INSERT INTO reports (user_id, post_id, comment_id, reason)
+            VALUES (%s, %s, %s, %s)
+            """,
+            (user_id, post_id, comment_id, reason)
+        )
 
-    # Every comment is related to a post ID, this should allow us to report posts and comments
-    if comment_id:
-        curr.execute("UPDATE comments SET reported = 1 WHERE comment_id = %s", (comment_id,))
-    
-    if post_id:
-        curr.execute("UPDATE posts SET reported = 1 WHERE post_id = %s", (post_id,))
+        if comment_id is not None:
+            curr.execute("UPDATE comments SET reported = TRUE WHERE comment_id = %s", (comment_id,))
+        
+        if post_id is not None:
+            curr.execute("UPDATE posts SET reported = TRUE WHERE post_id = %s", (post_id,))
 
-    curr.close()
-    db.commit()
+        db.commit()
+
+    except Exception as e:
+        print("REPORT ERROR:", e)
+        db.rollback()
+        raise e
+
+    finally:
+        curr.close()
 
 
 
@@ -418,7 +425,8 @@ def check_decision(request_id):
         SELECT decision_complete FROM role_update
         WHERE request_id = %s
         """,
-        (request_id, )
+        (request_id, ),
+        one=True
     )
 
     return decision_complete["decision_complete"] if decision_complete else False

@@ -509,7 +509,7 @@ def report_post(post_id):
 @login_required
 def report_comment(comment_id):
     reason = request.form.get('reason', 'No reason provided')
-    user_id = session['user_id']
+    user_id = session.get('user_id')
     
 
     db = get_db()
@@ -522,6 +522,8 @@ def report_comment(comment_id):
     )
     if post == None:
         return "Comment not found", 404
+    if not user_id:
+        return "Unauthorized", 403
 
     flag_item(
             user_id=user_id,
