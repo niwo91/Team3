@@ -14,6 +14,7 @@ from werkzeug.utils import secure_filename
 from Constants import *
 from anonymizer import anon_name
 from methods import *
+from methods import delete_post as delete_post_db
 
 import docx
 from bs4 import BeautifulSoup
@@ -281,7 +282,7 @@ def delete_post(post_id):
     if not (is_owner or is_admin or is_mod):
         return "Forbidden", 403
 
-    delete_post(post_id)
+    delete_post_db(post_id)
 
     return redirect(url_for('dashboard'))
 
