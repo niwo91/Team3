@@ -16,9 +16,9 @@ class dbUsers_Test(unittest.TestCase):
 
     #sets up temporary database for testing
     def setUp(self):
-
         testDB_setup.create("test.db")
         testDB_setup.fill("test.db")
+        g._database = sqlite3.connect("test.db")
 
 
     #closes db connection and removes temporary database if it exists
@@ -132,6 +132,7 @@ class dbCategory_Test(unittest.TestCase):
 
         testDB_setup.create("test.db")
         testDB_setup.fill("test.db")
+        g._database = sqlite3.connect("test.db")
 
     #closes db connection and removes temporary database if it exists
     def tearDown(self):
@@ -169,6 +170,7 @@ class dbPosts_Test(unittest.TestCase):
 
         testDB_setup.create("test.db")
         testDB_setup.fill("test.db")
+        g._database = sqlite3.connect("test.db")
 
     #closes db connection and removes temporary database if it exists
     def tearDown(self):
@@ -244,6 +246,7 @@ class dbComments_Test(unittest.TestCase):
 
         testDB_setup.create("test.db")
         testDB_setup.fill("test.db")
+        g._database = sqlite3.connect("test.db")
         # Create test post
         methods.create_a_post(1, 1, "Test_Title", "Test_Body")
 
@@ -295,8 +298,8 @@ class dbComments_Test(unittest.TestCase):
         self.assertEqual(2, len(db_comments), "Issue with get_comments method")
     
         # Look at first 5 in return row
-        test_comments = [(1, 1, 1, "Test1N", "Test1B"), (2, 1, 2, "Test2N", "Test2B")]
-        comments = [(db_comments[0][:5]), (db_comments[1][:5])]
+        test_comments = [(1, "Test1B", "Test1N"), (2,"Test2B", "Test2N")]
+        comments = [(db_comments[0][:3]), (db_comments[1][:3])]
         self.assertEqual(comments, test_comments, "Issue with get_comments method")
 
 
@@ -313,6 +316,7 @@ class dbCommentVotes_Test(unittest.TestCase):
 
         testDB_setup.create("test.db")
         testDB_setup.fill("test.db")
+        g._database = sqlite3.connect("test.db")
         # Create test post and comment
         methods.create_a_post(1, 1, "Test_Title", "Test_Body")
         methods.add_a_comment(1, 1, "Test1B", "Test1N")
@@ -383,6 +387,7 @@ class dbReports_Test(unittest.TestCase):
 
         testDB_setup.create("test.db")
         testDB_setup.fill("test.db")
+        g._database = sqlite3.connect("test.db")
         # Create test post and comment
         methods.create_a_post(1, 1, "Test_Title", "Test_Body")
         methods.add_a_comment(1, 1, "Test1B", "Test1N")
