@@ -557,10 +557,23 @@ def unreport_post(post_id):
 @app.route('/delete/comment/<int:comment_id>', methods=['POST'])
 @login_required
 def delete_comment(comment_id):
-    if current_user.role not in ('admin', 'moderator'):
+    db = get_db()
+
+    # Get the comment owner
+    comment = query_db(
+        "SELECT user_id FROM comments WHERE comment_id = ?",
+        (comment_id,),
+        one=True
+    )
+
+    if not comment:
+        return "Comment not found", 404
+
+    # Permission check
+    if current_user.role not in ('admin', 'moderator') and comment['user_id'] != current_user.id:
         return "Unauthorized", 403
 
-    db = get_db()
+    # Delete the comment
     db.execute("DELETE FROM comments WHERE comment_id = ?", (comment_id,))
     db.commit()
 
