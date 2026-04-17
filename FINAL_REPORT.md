@@ -1,7 +1,7 @@
-# StudySync Final Report
+# Homework Busters Final Report
 ## Milestone 8: Final Report Submission
 ## Project Title
-StudySync - A Collaborative Study Group Coordination Platform
+AnnonReview - A Collaborative Study Group Coordination Platform
 ## Team Members
 - Aisha Raman
 - Diego Martinez
