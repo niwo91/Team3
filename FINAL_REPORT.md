@@ -3,10 +3,10 @@
 ## Project Title
 AnnonReview - A Collaborative Study Group Coordination Platform
 ## Team Members
-- Aisha Raman
-- Diego Martinez
-- Lily Chen
-- Marcus Thompson
+- Faisal Shahin
+- Adeline Bowman
+- Nicholas Woody
+- Nandini Bhat
 ## Required Links
 - Project tracker (instructor can access): [Trello
 Board](https://team-3-project.atlassian.net/jira/core/projects/T3/board?filter=&groupBy=status)
