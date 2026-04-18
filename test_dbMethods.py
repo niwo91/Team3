@@ -437,7 +437,7 @@ class dbReports_Test(unittest.TestCase):
         self.assertEqual(reported2[0], 1, "Issue with flag_item method")
 
 
-    '''
+'''
 Purpose: Class for database access unit tests (table: role_update)
 Parameters: None
 Usage: In terminal run: python3 test_dbMethods.py dbRoleUpdate_Test
@@ -446,6 +446,7 @@ class dbRoleUpdate_Test(unittest.TestCase):
 
     #sets up temporary database for testing
     def setUp(self):
+        
         testDB_setup.create("test.db")
         testDB_setup.fill("test.db")
         g._database = sqlite3.connect("test.db")
@@ -498,7 +499,7 @@ class dbRoleUpdate_Test(unittest.TestCase):
         #approve of one request
         methods.approve_new_role('teacher', 'test_student2', 1)
 
-        #check if only incomplete request is retrieved, decision status for both
+        #check if only incomplete request is retrieved, decision status for both, whether new role applied after approval
         requests = methods.get_requests()
 
         request_2 = []
@@ -509,11 +510,14 @@ class dbRoleUpdate_Test(unittest.TestCase):
         length = len(requests)
         check_complete_1 = methods.check_decision(1)[0][0]
         check_complete_2 = methods.check_decision(2)[0][0]
+        user_updated = methods.check_user('test_student2', 'TestPass02')
+
 
         self.assertEqual(length, 1)
         self.assertEqual(request_2, ['test_student', 'test1@student.com', 'moderator', 2])
         self.assertEqual(check_complete_1, True)
         self.assertEqual(check_complete_2, False)
+        self.assertEqual(user_updated, ([2, 'test_student2', 'teacher'], True, True))
 
 
     #test for rejecting requests, checking for decision completion
@@ -527,17 +531,20 @@ class dbRoleUpdate_Test(unittest.TestCase):
         methods.approve_new_role('teacher', 'test_student2', 1)
         methods.reject_new_role(2)
 
-        #check that no requests are retrieved, decision status for both
+        #check that no requests are retrieved, decision status for both, whether new role applied after approval, not applied after rejection
         requests = methods.get_requests()
 
         length = len(requests)
         check_complete_1 = methods.check_decision(1)[0][0]
         check_complete_2 = methods.check_decision(2)[0][0]
+        user_updated = methods.check_user('test_student2', 'TestPass02')
+        user_not_updated = methods.check_user('test_student', 'TestPass01')
 
         self.assertEqual(length, 0)
         self.assertEqual(check_complete_1, True)
         self.assertEqual(check_complete_2, True)
-
+        self.assertEqual(user_updated, ([2, 'test_student2', 'teacher'], True, True))
+        self.assertEqual(user_not_updated, ([1, 'test_student', 'student'], True, True))
 
 
 
