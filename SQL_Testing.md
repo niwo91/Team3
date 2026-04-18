@@ -25,6 +25,7 @@ Our current implementation uses the following tables:
 - comments
 - comment_votes
 - reports
+- role_update
 
 Each of these tables is described below. <br><br> *Note: All tests are conditioned on the database running*
 
@@ -82,6 +83,7 @@ Stores information for users of AnonReview.
 * One-to-many with *comments*
 * One-to-many with *comment_votes*
 * One-to-many with *reports*
+* One-to-many with *role_update*
 ### Table Tests
 **Use Case:** Registering a User <br>
 **Description:** Verify a new user is stored in the database correctly when registered <br>
@@ -248,6 +250,51 @@ Table to hold information for "reported" comments/Posts on the AnonReview platfo
 **Actual Result:** <br>
 **Status:** <br>
 **Post-conditions:** report persists
+
+---
+
+## 7) Table: role_update
+
+### Table Description
+Stores requests for role updates (from student to teacher/moderator).
+
+### Fields
+| Field Name | Field Description | Field Constraints |
+|------------|-------------------|-------------------|
+|request_id|Unique Category Identifier|Primary Key|
+|user_id|ID of user who made request|Foreign Key, Not Null|
+|new_role|New role that user has selected|Value can either be 'teacher' or 'moderator'|
+|decision_complete|Bool to check if mod/admin has taken decision on request|Default is 0 (incomplete decision)|
+|created_at|Stores when request is created|Default is current timestamp|
+
+### Relationships
+* Many-to-one with *users*
+### Table Tests
+**Use Case:** Adding a request <br>
+**Description:** Verify a new request has been added to the table <br>
+**Pre-conditions:** Database running <br>
+
+**Test Steps:**
+1. Insert valid role_update row
+2. Query request by request_id <br>
+
+**Expected Result:** Request is inserted in table and able to be queried succesfully by request_id <br>
+**Actual Result:** <br>
+**Status:** <br>
+**Post-conditions:** Request persists
+
+**Use Case:** Update decision completion <br>
+**Description:** Verify that decision_complete is set to 1 after mod/admin reject/accepts request <br>
+**Pre-conditions:** Database running <br>
+
+**Test Steps:**
+1. Set decision_complete to 1 for any row/rows in role_update table
+2. Query role_update by request_id <br>
+
+**Expected Result:** decision_complete should be set to one for selected row/rows <br>
+**Actual Result:** <br>
+**Status:** <br>
+**Post-conditions:** decision_complete value should persist 
 
 
 ---
@@ -599,6 +646,158 @@ post_id, comment_id
 
 ---
 
+# Access Method: add_request
+
+### Description
+Inserts a request for a role update into the role_update table.
+
+### Parameters
+- user_id (int)
+- new_role (string)
+
+### Return Values
+- None
+
+### Tests
+
+**Use Case Name:** Verify request has been added 
+
+**Pre-conditions:** User should have role 'student'
+
+**Test Steps:**
+
+1. Navigate to Update Role section on dashboard
+2. Select role from dropdown menu ('teacher' or 'moderator')
+3. Submit form
+
+**Expected Result:** Request should be added to role update as a row
+
+**Post-conditions:** Request successfully submitted by user, persists in database
+
+---
+
+# Access Method: get_requests
+
+### Description
+Retrieve all incomplete requests (decision_complete == 0) from role_update table.
+
+### Parameters
+None
+
+### Return Values
+- List of rows (requests) where decision_complete == 0.
+
+### Tests
+
+**Use Case Name:** Verify that all rows where decision_complete == 0 are being returned 
+
+**Pre-conditions:** User should have role 'moderator' or 'admin', undecided request(s) should have been submitted through Update Role form previously
+
+**Test Steps:**
+
+1. Log in as user with role 'moderator' or 'admin'
+2. Navigate to Role Update Requests section
+
+**Expected Result:** Method should retrieve all rows where decision_complete == 0
+
+**Post-conditions:** User should be able to view all submitted (but incomplete) requests
+
+
+---
+
+# Access Method: check_decision
+
+### Description
+Checks whether the decision for a request is already complete (decision_complete == 1).
+
+### Parameters
+- request_id (int)
+
+### Return Values
+- Value of decision_complete for specific request_id (1 or 0)
+
+### Tests
+
+**Use Case Name:** Check that two users cannot update decision
+
+**Pre-conditions:** User should have role 'moderator' or 'admin'. Two users with either role should exist. Two testers should be available for testing. Undecided request(s) should have been submitted through Update Role form previously
+
+**Test Steps:**
+
+1. Both developers log in on either of the two moderator/admin accounts
+2. Both navigate to Role Update Requests section
+3. First tester approves/rejects a request
+4. Second tester should click approve/reject for same request
+
+**Expected Result:** decision_complete successfully updated by first tester, decision persists through other decision attempts
+
+**Post-conditions:** First tester should see approved/rejected request removed from list of requests. When second tester tries to take decision on same request, flash message should appear informing them that decision has already been made. Second tester's decision should not override first tester's.
+
+---
+
+# Access Method: approve_new_role
+
+### Description
+Approves a role update for the user that made request, changes their role accordingly. Sets decision_complete to 1.
+
+### Parameters
+- new_role (string)
+- username (string)
+- request_id (int)
+
+### Return Values
+- None
+
+### Tests
+
+**Use Case Name:** Verify role update on approval
+
+**Pre-conditions:** User should be logged in with role 'moderator' or 'admin'. Undecided request(s) should have been submitted through Update Role form previously
+
+**Test Steps:**
+
+1. Log in as moderator/admin
+2. Navigate to Role Update Requests section
+3. Approve the submitted request
+4. Log out, log in as user who submitted request
+
+**Expected Result:** Role should successfully be updated in users table for user that submitted request. decision_complete should be set to 1 for the request.
+
+**Post-conditions:** Admin/Moderators should not be able to see the request on reload of page. When user logs in, their permissions should successfully be updated to those of their new role (e.g. post deletion, no visible Update Role section for teachers, Role Requests section replaces Update Role section for moderators
+
+---
+
+# Access Method: reject_new_role
+
+### Description
+Rejects a role update for the user that made request, does not change their role. Sets decision_complete to 1.
+
+### Parameters
+- request_id (int)
+
+### Return Values
+- None
+
+### Tests
+
+**Use Case Name:** Verify role update rejection
+
+**Pre-conditions:** User should be logged in with role 'moderator' or 'admin'. Undecided request(s) should have been submitted through Update Role form previously
+
+**Test Steps:**
+
+1. Log in as moderator/admin
+2. Navigate to Role Update Requests section
+3. Reject the submitted request
+4. Log out, log in as user who submitted request
+
+**Expected Result:** Role should not be updated in users table for user that submitted request. decision_complete should be set to 1 for the request.
+
+**Post-conditions:** Admin/Moderators should not be able to see the request on reload of page. When user logs in, their permissions should still be student permissions.
+
+---
+
+
 ## Page-to-Database Mapping
 
 | Page | Tables Accessed |
@@ -609,6 +808,8 @@ post_id, comment_id
 | view post | posts, comments, comment_votes |
 | create post| users, posts, categories|
 | index page| None|
+| Update Role page| role_update|
+| Role Update Requests page| role_update, users|
 
 ---
 # Page Data Access Tests
@@ -626,6 +827,8 @@ post_id, comment_id
 
 **Post-conditions:** None
 
+---
+
 **Use Case Name:** View post
 
 **Description:** Viewing a post should show all post related content along with any comments and comment votes.
@@ -639,6 +842,46 @@ post_id, comment_id
 **Expected Result:** Post displays data and comments correctly.
 
 **Post-conditions:** None
+
+---
+
+**Use Case Name:** View Update Role form
+
+**Description:** User logged in as 'student' should be able to navigate to and view the Update Role form
+
+**Pre-conditions:** User is logged in with role 'student' and is on dashboard
+
+**Test Steps:** 
+1. Log in as user with role 'student'
+2. Navigate to Update Role section
+   
+**Expected Result:** User should be able to:
+- View Update Role form
+- Interact with dropdown menu
+- Click submit button
+- View success message on submit
+
+**Post-conditions:** List of role update requests should be updated on moderator/admin accounts when viewing Role Update Requests page
+
+---
+
+**Use Case Name:** View Role Update Requests page
+
+**Description:** User logged in as 'moderator' or 'admin' should be able to navigate to and view the Role Update Requests page
+
+**Pre-conditions:** User is logged in with role 'moderator' or 'admin' and is on dashboard
+
+**Test Steps:** 
+1. Log in as user with role 'moderator' or 'admin'
+2. Navigate to Role Update Requests section
+   
+**Expected Result:** User should be able to:
+- View Role Update Requests page
+- View list of requests
+- Be able to interact with 'Approve' and 'Reject' buttons
+- Request should be removed from page on 'Approve' or 'Reject' button click
+
+**Post-conditions:** List of role update requests should be updated on moderator/admin accounts when viewing Role Update Requests page
 
 ---
 
