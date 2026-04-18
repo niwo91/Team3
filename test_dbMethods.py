@@ -431,6 +431,107 @@ class dbReports_Test(unittest.TestCase):
         self.assertEqual(reported1[0], 1, "Issue with flag_item method")
         self.assertEqual(reported2[0], 1, "Issue with flag_item method")
 
+    
+'''
+Purpose: Class for database access unit tests (table: role_update)
+Parameters: None
+Usage: In terminal run: python3 test_dbMethods.py dbRoleUpdate_Test
+'''
+class dbRoleUpdate_Test(unittest.TestCase):
+
+    #sets up temporary database for testing
+    def setUp(self):
+        
+        testDB_setup.create("test.db")
+        testDB_setup.fill("test.db")
+
+
+    #closes db connection and removes temporary database if it exists
+    def tearDown(self):
+
+        db = g.pop('db', None)
+
+        if db is not None:
+            db.close()
+
+        try:
+            os.remove("test.db")
+        except OSError:
+            pass
+
+    
+    #test for adding and retrieving requests
+    def test_add_retrieve(self):
+        
+        #add new requests
+        methods.add_request(2, 'teacher')
+        methods.add_request(1, 'moderator')
+
+        #retrieve new requests, check if all have been retrieved
+        requests = methods.get_requests()
+
+        request_1 = []
+        request_2 = []
+
+        for i in requests[0]:
+            request_1.append(i)
+
+        for i in requests[1]:
+            request_2.append(i)
+
+        self.assertEqual(request_1, ['test_student2', 'test2@student.com', 'teacher', 1])
+        self.assertEqual(request_2, ['test_student', 'test1@student.com', 'moderator', 2])
+
+    
+    #test for approving requests, retrieving incomplete requests, checking for decision completion
+    def test_accept_check(self):
+
+        #add new requests
+        methods.add_request(2, 'teacher')
+        methods.add_request(1, 'moderator')
+
+        #approve of one request
+        methods.approve_new_role('teacher', 'test_student2', 1)
+
+        #check if only incomplete request is retrieved, decision status for both
+        requests = methods.get_requests()
+
+        request_2 = []
+
+        for i in requests[0]:
+            request_2.append(i)
+
+        length = len(requests)
+        check_complete_1 = methods.check_decision(1)[0][0]
+        check_complete_2 = methods.check_decision(2)[0][0]
+
+        self.assertEqual(length, 1)
+        self.assertEqual(request_2, ['test_student', 'test1@student.com', 'moderator', 2])
+        self.assertEqual(check_complete_1, True)
+        self.assertEqual(check_complete_2, False)
+
+
+    #test for rejecting requests, checking for decision completion
+    def test_reject_check(self):
+
+        #add new requests
+        methods.add_request(2, 'teacher')
+        methods.add_request(1, 'moderator')
+
+        #approve of first request, reject second request
+        methods.approve_new_role('teacher', 'test_student2', 1)
+        methods.reject_new_role(2)
+
+        #check that no requests are retrieved, decision status for both
+        requests = methods.get_requests()
+
+        length = len(requests)
+        check_complete_1 = methods.check_decision(1)[0][0]
+        check_complete_2 = methods.check_decision(2)[0][0]
+
+        self.assertEqual(length, 0)
+        self.assertEqual(check_complete_1, True)
+        self.assertEqual(check_complete_2, True)
 
 
 
