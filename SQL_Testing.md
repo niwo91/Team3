@@ -39,7 +39,7 @@ Stores information for the different categories of posts a user can choose.
 ### Fields
 | Field Name | Field Description | Field Constraints |
 |------------|-------------------|-------------------|
-|category_id|Unique category identifier|Primary Key|
+|category_id|Unique table identifier for categories|Primary Key|
 |name| Stores the category name|Not Null|
 |description|Stores the category description| | 
 
@@ -56,8 +56,8 @@ Stores information for the different categories of posts a user can choose.
 1. Query Category names <br>
 
 **Expected Result:** All categories are returned <br>
-**Actual Result:** <br>
-**Status:** <br>
+**Actual Result:** All categories were returned <br>
+**Status:** Pass <br>
 **Post-conditions:** Categories persist
 
 ---
@@ -70,7 +70,7 @@ Stores information for users of AnonReview.
 ### Fields
 | Field Name | Field Description | Field Constraints |
 |------------|-------------------|-------------------|
-|user_id|Unique Category Identifier|Primary Key|
+|user_id|Unique Table Identifier for users|Primary Key|
 |username|Stores the users chosen username|Unique, Not Null|
 |email|Stores Users email address|Unique, Not Null|
 |password_hash|Stores users hashed password|Not Null|
@@ -94,8 +94,8 @@ Stores information for users of AnonReview.
 2. Query user by user_id <br>
 
 **Expected Result:** User is inserted in table and able to be queried succesfully by user_id <br>
-**Actual Result:** <br>
-**Status:** <br>
+**Actual Result:** User was inserted into table and was able to be queried succesfully <br>
+**Status:** Pass <br>
 **Post-conditions:** User persists
 
 ---
@@ -108,7 +108,7 @@ Stores information about users posts to the AnonReview platform
 ### Fields
 | Field Name | Field Description | Field Constraints |
 |------------|-------------------|-------------------|
-|post_id|Unique Category Identifier|Primary Key|
+|post_id|Unique Table Identifier for posts|Primary Key|
 |user_id|Foreign key related to users table|Foreign Key, Not Null|
 |category_id|Foreign key related to categories table|Foreign Key|
 |title|Title of post| Not Null|
@@ -136,8 +136,8 @@ Stores information about users posts to the AnonReview platform
 2. Query user by post_id <br>
 
 **Expected Result:** Post is inserted in table and able to be queried succesfully by post_id <br>
-**Actual Result:** <br>
-**Status:** <br>
+**Actual Result:** Post inserted succesfully <br>
+**Status:** Pass <br>
 **Post-conditions:** Post persists
 
 ---
@@ -150,7 +150,7 @@ Stores any comments related to a particular post
 ### Fields
 | Field Name | Field Description | Field Constraints |
 |------------|-------------------|-------------------|
-|comment_id|Unique category identifier|Primary Key|
+|comment_id|Unique Table identifier for comments|Primary Key|
 |post_id|Foreign key related to posts|Foreign Key, Not Null|
 |user_id|Foreign key related to users|Foreign Key, Not Null|
 |anon_name|Anonymous name for user| |
@@ -178,8 +178,8 @@ Stores any comments related to a particular post
 2. Query user by comment_id <br>
 
 **Expected Result:** Comment is inserted in table and able to be queried succesfully by comment_id <br>
-**Actual Result:** <br>
-**Status:** <br>
+**Actual Result:** Comment inserted succesfully <br>
+**Status:** Pass <br>
 **Post-conditions:** Comment persists
 
 ---
@@ -192,7 +192,7 @@ Stores data for upvotes and downvotes on comments
 ### Fields
 | Field Name | Field Description | Field Constraints |
 |------------|-------------------|-------------------|
-|id|Unique Table identifier| Primary Key|
+|id|Unique Table identifier for comment_votes| Primary Key|
 |user_id| Foreign key related to users table| Foreign Key|
 |comment_id|Foreign Key related to comments table| Foreign Key|
 |vote_type| Type of vote (up or down) for record| |
@@ -210,8 +210,8 @@ Stores data for upvotes and downvotes on comments
 2. Query user by id <br>
 
 **Expected Result:** Comment_vote is inserted correctly <br>
-**Actual Result:** <br>
-**Status:** <br>
+**Actual Result:** Comment vote inserted correctly <br>
+**Status:** Pass <br>
 **Post-conditions:** Comment_vote persists
 
 ---
@@ -224,7 +224,7 @@ Table to hold information for "reported" comments/Posts on the AnonReview platfo
 ### Fields
 | Field Name | Field Description | Field Constraints |
 |------------|-------------------|-------------------|
-|Report_id|Unique category identifier|Primary Key|
+|Report_id|Unique table identifier for reports|Primary Key|
 |user_id| Foreign Key which references the user table|Foreign Key, Not Null|
 |post_id|Foreign Key which references the posts table|Foreign Key, Not Null|
 |comment_id|Foreign Key which references the comments table|Foreign Key|
@@ -247,8 +247,8 @@ Table to hold information for "reported" comments/Posts on the AnonReview platfo
 2. Query report by report_id <br>
 
 **Expected Result:** report is inserted correctly <br>
-**Actual Result:** <br>
-**Status:** <br>
+**Actual Result:** Report inserted correctly <br>
+**Status:** Pass <br>
 **Post-conditions:** report persists
 
 ---
@@ -261,7 +261,7 @@ Stores requests for role updates (from student to teacher/moderator).
 ### Fields
 | Field Name | Field Description | Field Constraints |
 |------------|-------------------|-------------------|
-|request_id|Unique Category Identifier|Primary Key|
+|request_id|Unique Table Identifier for role updates|Primary Key|
 |user_id|ID of user who made request|Foreign Key, Not Null|
 |new_role|New role that user has selected|Value can either be 'teacher' or 'moderator'|
 |decision_complete|Bool to check if mod/admin has taken decision on request|Default is 0 (incomplete decision)|
@@ -279,8 +279,8 @@ Stores requests for role updates (from student to teacher/moderator).
 2. Query request by request_id <br>
 
 **Expected Result:** Request is inserted in table and able to be queried succesfully by request_id <br>
-**Actual Result:** <br>
-**Status:** <br>
+**Actual Result:** Request inserted succesfully <br>
+**Status:** Pass<br>
 **Post-conditions:** Request persists
 
 **Use Case:** Update decision completion <br>
@@ -292,8 +292,8 @@ Stores requests for role updates (from student to teacher/moderator).
 2. Query role_update by request_id <br>
 
 **Expected Result:** decision_complete should be set to one for selected row/rows <br>
-**Actual Result:** <br>
-**Status:** <br>
+**Actual Result:** Decision set appropiately<br>
+**Status:** Pass <br>
 **Post-conditions:** decision_complete value should persist 
 
 
@@ -531,7 +531,7 @@ Post ID
 
 ---
 
-# Access Method: delete_post
+# Access Method: delete_a_post
 
 ### Description
 Deletes a post
@@ -554,7 +554,7 @@ post_id
 
 ---
 
-# Access Method: add_comment
+# Access Method: add_a_comment
 
 ### Description
 Adds a comment to a post
@@ -616,6 +616,29 @@ comment_id
 **Test Steps:**
 
 1. Query the database and ensure all data is pulled correctly for comments_votes related to a particular comment.
+
+**Expected Result:** All data is retrieved correctly.
+
+**Post-conditions:** Comment_vote record persists.
+
+---
+
+# Access Method: vote_a_comment
+
+### Description
+Vote up or down on a particular comment
+
+### Parameters
+user_id, comment_id, vote_type
+
+### Tests
+**Use Case Name:** Vote up or down on a particular comment
+
+**Pre-conditions:** Database is running
+
+**Test Steps:**
+
+1.  Query the database to ensure it returns the record correctly and correctly creates an incremented id (primary key)for the table.
 
 **Expected Result:** All data is retrieved correctly.
 
