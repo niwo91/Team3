@@ -13,7 +13,7 @@ Board](https://team-3-project.atlassian.net/jira/core/projects/T3/board?filter=&
 - Version control repository (instructors have access): [GitHub
 Repo](https://github.com/niwo91/Team3)
 - 5-minute customer demo video: [Demo Video](https://youtu.be/dShZ4i4XUP0)
-- Public deployment site: [StudySync Deployment](https://team3-qcsm.onrender.com)
+- Public deployment site: [AnonReview Deployment](https://team3-qcsm.onrender.com)
 ## Repository Readiness
 All team members have verified that their latest work is pushed to the remote
 repository.
@@ -23,8 +23,7 @@ The repository contains the following required files and assets:
 - PAGE_TESTING.md
 - SQL_TESTING.md
 - FINAL_REPORT.md
-- Project presentation files from the Presentation Milestone -- NEED TO ADD
-- Video of demo -- NEED TO ADD
+- Project presentation files from the Presentation Milestone
 - Source code (frontend and backend)
 - Test cases (unit and integration)
 - Source documentation and auto-generated documentation files
@@ -39,14 +38,14 @@ The repository contains the following required files and assets:
 - Reporting system for posts and comments, including moderation workflow
 - Admin and moderator dashboard for reviewing reports
 - Category-based organization of posts including a dedicated "Reported Items" category
-- PostgreSQL and SQL-ite database with relational schema and constraints
+- PostgreSQL and SQLite database with relational schema and constraints
 - Deployment on Render with persistent database
 ### What We Were in the Middle of Implementing
 - Real-time updates for comments and reports (currently request-based refresh)
 - Improved UI consistency and layout spacing
 - Better file preview support for additional formats
 - Expanded automated testing coverage
-- Break out rooms Epic
+- User banning functionality
 ### What We Planned for the Future
 - WebSocket-based real-time updates for comments and moderation
 - Improved UI/UX and mobile responsiveness
@@ -66,7 +65,7 @@ The repository contains the following required files and assets:
 AnonReview follows a standard web application architecture:
 
 - Backend: Flask application handling routing, authentication, and business logic
-- Database: PostgreSQL accessed through psycopg2 with helper query functions, and SQL Lite
+- Database: PostgreSQL accessed through psycopg2 with helper query functions, and SQLite
 - Frontend: HTML templates rendered with Jinja2
 The system was designed to support incremental development, clear separation of
 concerns, and straightforward testing.
@@ -78,6 +77,8 @@ Key design decisions:
 - Role-based authorization enforced at route level
 
 ## Page Data Access Tests (High-Level)
+
+**See more details at SQL_Testing.md**
 
 ### Use case name
 Create post with file upload
@@ -117,7 +118,7 @@ File preview depends on file type support
 
 ## Reflection
 
-This project gave us experience building a full-stack web application from scratch.
+This project gave us experience building a full-stack web application from scratch. It also gave us experience working within a software development team using the Agile method. Our team was succesful because everyone contributed throughout the project. It exposed us to many tools, like Trello, and let us practice many of the concepts we learned in class, like git workflows, unit testing, and breaking up code into methods/functions. 
 
 ### Key takeaways
 - Separating database logic from routes made development easier to manage
