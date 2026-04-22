@@ -12,7 +12,7 @@ AnnonReview - A Collaborative Study Group Coordination Platform
 Board](https://team-3-project.atlassian.net/jira/core/projects/T3/board?filter=&groupBy=status)
 - Version control repository (instructors have access): [GitHub
 Repo](https://github.com/niwo91/Team3)
-- 5-minute customer demo video: [Demo Video](https://youtu.be/studysync-demo)[NICK TO UPDATE  ]
+- 5-minute customer demo video: [Demo Video](https://youtu.be/dShZ4i4XUP0)
 - Public deployment site: [StudySync Deployment](https://team3-qcsm.onrender.com)
 ## Repository Readiness
 All team members have verified that their latest work is pushed to the remote
